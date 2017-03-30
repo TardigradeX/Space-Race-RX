@@ -38,7 +38,7 @@ export default class extends Phaser.State {
   worldBoaderCollide(sprite) {
       if (sprite.x <= 32)
       {
-          worldCollision();
+          this.worldCollision();
       }
       else if (sprite.x >= this.game.width-32)
       {
