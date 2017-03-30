@@ -38,6 +38,8 @@ export default class extends Phaser.Sprite {
         {
             this.body.angularVelocity = 0;
         }
+
+        this.game.worldBoaderCollide(this);
     }
 
 }

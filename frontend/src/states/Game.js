@@ -7,12 +7,12 @@ export default class extends Phaser.State {
   preload () {}
 
   create () {
-    const bannerText = 'Xander Ruullled';
+    const bannerText = 'Xander s Test';
     let banner = this.add.text(this.world.centerX, this.game.height - 80, bannerText);
     banner.font = 'Bangers';
     banner.padding.set(10, 16);
     banner.fontSize = 40;
-    banner.fill = '#77BFA3';
+    banner.fill = '#0c83bf';
     banner.smoothed = false;
     banner.anchor.setTo(0.5);
 
@@ -33,4 +33,29 @@ export default class extends Phaser.State {
       this.game.debug.spriteInfo(this.spaceShip, 32, 32)
     }
   }
+
+
+  worldBoaderCollide(sprite) {
+      if (sprite.x <= 32)
+      {
+          worldCollision();
+      }
+      else if (sprite.x >= this.game.width-32)
+      {
+          this.worldCollision();
+      }
+
+      if (sprite.y <= 32)
+      {
+          this.worldCollision();
+      }
+      else if (sprite.y >= this.game.height - 32)
+      {
+          this.worldCollision();
+      }
+  }
+
+    worldCollision() {
+        this.state.start('GameOver')
+    }
 }
