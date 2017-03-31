@@ -12,7 +12,7 @@ from autobahn.twisted.websocket import WebSocketServerFactory, \
 from autobahn.twisted.resource import WebSocketResource
 
 
-class SomeServerProtocol(WebSocketServerProtocol):
+class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
     def onConnect(self, response):
         print("Connected to Server: {}".format(response.peer))
@@ -46,9 +46,9 @@ class SomeServerProtocol(WebSocketServerProtocol):
         print("Connection closed")
 
 
-class ChatRouletteFactory(WebSocketServerFactory):
+class SpaceRaceRXFactory(WebSocketServerFactory):
     def __init__(self, *args, **kwargs):
-        super(ChatRouletteFactory, self).__init__(*args, **kwargs)
+        super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
         self.clients = {}
 
     def register(self, client):
@@ -89,18 +89,20 @@ class ChatRouletteFactory(WebSocketServerFactory):
 
 
 if __name__ == "__main__":
+    port = 9000 # tcp port
+
     log.startLogging(sys.stdout)
 
     # static file server seving index.html as root
     root = File(".")
 
-    factory = ChatRouletteFactory(u"ws://127.0.0.1:9000")
-    factory.protocol = SomeServerProtocol
+    factory = SpaceRaceRXFactory(u"ws://127.0.0.1:"+str(port))
+    factory.protocol = SpaceRaceRXProtocol
     resource = WebSocketResource(factory)
     # websockets resource on "/ws" path
     root.putChild(b"ws", resource)
 
     site = Site(root)
-    reactor.listenTCP(9000, site)
+    reactor.listenTCP(port, site)
     # reactor.listenTCP(8080, factory)
     reactor.run()
