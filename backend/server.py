@@ -47,6 +47,7 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
 
 class SpaceRaceRXFactory(WebSocketServerFactory):
+
     def __init__(self, *args, **kwargs):
         super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
         self.clients = {}
@@ -105,4 +106,5 @@ if __name__ == "__main__":
     site = Site(root)
     reactor.listenTCP(port, site)
     # reactor.listenTCP(8080, factory)
+    
     reactor.run()
