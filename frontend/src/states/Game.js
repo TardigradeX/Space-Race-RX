@@ -4,7 +4,24 @@ import SpaceShip from '../sprites/spaceship'
 
 export default class extends Phaser.State {
   init () {}
-  preload () {}
+  preload () {
+      this.websocket = new WebSocket("ws://localhost:9000/ws");
+
+      // When the connection is open, send some data to the server
+      this.websocket.onopen = function () {
+          console.log("OPENED SOCKET");
+      };
+
+      // Log errors
+      this.websocket.onerror = function (error) {
+          console.log('WebSocket Error ' + error);
+      };
+
+      this.websocket.onmessage = function (message) {
+          console.log("Message Incoming ... ")
+          console.log(message.data);
+      }
+  }
 
   create () {
     const bannerText = 'Xander s Test';
@@ -56,6 +73,6 @@ export default class extends Phaser.State {
   }
 
     worldCollision() {
-        this.state.start('GameOver')
+        //this.state.start('GameOver')
     }
 }
