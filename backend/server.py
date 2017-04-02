@@ -1,5 +1,7 @@
 import sys
 import random
+import re
+
 
 from twisted.web.static import File
 from twisted.python import log
@@ -11,96 +13,67 @@ from autobahn.twisted.websocket import WebSocketServerFactory, \
 
 from autobahn.twisted.resource import WebSocketResource
 
+class SpaceRaceRXFactory(WebSocketServerFactory):
 
-class SomeServerProtocol(WebSocketServerProtocol):
+    def __init__(self, *args, **kwargs):
+        super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
+        # since connection order is 1) master and 2) controller, this works.
+        # Room can be prepared with empty controllers,
+        # destroyed as last controller gone
+        self.master = None
+        self.controller = None
 
-    def onConnect(self, response):
-        print("Connected to Server: {}".format(response.peer))
+    def unregister(self, client):
+        if client.peer == self.controller:
+            controller = None
 
-    def onOpen(self):
-        """
-        Connection from client is opened. Fires after opening
-        websockets handshake has been completed and we can send
-        and receive messages.
+        if client.peer == self.master:
+            master = None
 
-        Register client in factory, so that it is able to track it.
-        Try to find conversation partner for this client.
-        """
-        self.factory.register(self)
-        self.factory.findPartner(self)
+    def broadcast(self, msg):
+        print("broadcasting message '{}' ..".format(msg))
+        for c in self.clients:
+            c.sendMessage(msg.encode('utf8'), False)
+            print("message sent to {}".format(c.peer))
+
+class SpaceRaceRXProtocol(WebSocketServerProtocol):
+
+
+    def onConnect(self, request):
+        if self.master is None:
+            self.master = request.peer
+        else:
+            self.controller = request.peer
 
     def connectionLost(self, reason):
-        """
-        Client lost connection, either disconnected or some error.
-        Remove client from list of tracked connections.
-        """
         self.factory.unregister(self)
 
     def onMessage(self, payload, isBinary):
-        """
-        Message sent from client, communicate this message to its conversation partner,
-        """
-        self.factory.communicate(self, payload, isBinary)
+        self.sendMessage(payload.encode('utf8'), False)
 
     def onClose(self):
-        print("Connection closed")
+        print("Closing connection")
+        """self.onClose()"""
 
 
-class ChatRouletteFactory(WebSocketServerFactory):
-    def __init__(self, *args, **kwargs):
-        super(ChatRouletteFactory, self).__init__(*args, **kwargs)
-        self.clients = {}
-
-    def register(self, client):
-        """
-        Add client to list of managed connections.
-        """
-        self.clients[client.peer] = {"object": client, "partner": None}
-
-    def unregister(self, client):
-        """
-        Remove client from list of managed connections.
-        """
-        self.clients.pop(client.peer)
-
-    def findPartner(self, client):
-        """
-        Find chat partner for a client. Check if there any of tracked clients
-        is idle. If there is no idle client just exit quietly. If there is
-        available partner assign him/her to our client.
-        """
-        available_partners = [c for c in self.clients if c != client.peer and not self.clients[c]["partner"]]
-        if not available_partners:
-            print("no partners for {} check in a moment".format(client.peer))
-        else:
-            partner_key = random.choice(available_partners)
-            self.clients[partner_key]["partner"] = client
-            self.clients[client.peer]["partner"] = self.clients[partner_key]["object"]
-
-    def communicate(self, client, payload, isBinary):
-        """
-        Broker message from client to its partner.
-        """
-        c = self.clients[client.peer]
-        if not c["partner"]:
-            c["object"].sendMessage("Sorry you dont have partner yet, check back in a minute".encode('utf8'), isBinary=False)
-        else:
-            c["partner"].sendMessage(payload, isBinary)
 
 
 if __name__ == "__main__":
+    port = 9000 # tcp port
+
     log.startLogging(sys.stdout)
 
     # static file server seving index.html as root
     root = File(".")
 
-    factory = ChatRouletteFactory(u"ws://127.0.0.1:9000")
-    factory.protocol = SomeServerProtocol
+    factory = SpaceRaceRXFactory(u"ws://127.0.0.1:"+str(port))
+    factory.protocol = SpaceRaceRXProtocol
     resource = WebSocketResource(factory)
     # websockets resource on "/ws" path
     root.putChild(b"ws", resource)
 
     site = Site(root)
-    reactor.listenTCP(9000, site)
+    reactor.listenTCP(port, site)
     # reactor.listenTCP(8080, factory)
+
     reactor.run()
