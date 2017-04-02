@@ -28,7 +28,7 @@ class MyClientProtocol(WebSocketClientProtocol):
         print("WebSocket connection open.")
         ui = input(u'Enter room id here:\n')
         granted = False
-        while not granted
+        while not granted:
             self.sendLogin(self, ui)
 
 
