@@ -6,7 +6,7 @@ export default class extends Phaser.State {
     init () {}
 
     preload () {
-        this.websocket = new WebSocket("ws://localhost:9000/ws");
+        this.websocket = new WebSocket("ws://192.168.2.166:9000/ws");
 
         // When the connection is open, send some data to the server
         this.websocket.onopen = function () {
@@ -17,6 +17,11 @@ export default class extends Phaser.State {
         this.websocket.onerror = function (error) {
             console.log('WebSocket Error ' + error);
         };
+
+        this.websocket.onmessage = function (message) {
+            console.log("Message Incoming ... ")
+            console.log(message.data);
+        }
     }
 
     create () {

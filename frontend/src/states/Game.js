@@ -9,7 +9,7 @@ export default class extends Phaser.State {
 
       // When the connection is open, send some data to the server
       this.websocket.onopen = function () {
-          console.log("OPENED SOCKET");
+          console.log("OPENED MASTER SOCKET");
       };
 
       // Log errors

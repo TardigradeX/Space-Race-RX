@@ -23,11 +23,12 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
     def onConnect(self, request):
-        print ("Connected client")
+        print("some request connected {}".format(request))
 
     def onMessage(self, payload, isBinary):
         print("SENDING MESSAGE .....")
         self.sendMessage(payload, False)
+        print("Message sent outtttt .....")
 
     def onClose(self):
         print("Closing connection")
