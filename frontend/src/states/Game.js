@@ -3,8 +3,11 @@ import Phaser from 'phaser'
 import SpaceShip from '../sprites/spaceship'
 
 export default class extends Phaser.State {
-  init () {}
+  init () {
+  }
   preload () {
+      self = this
+
       this.websocket = new WebSocket("ws://localhost:9000/ws");
 
       // When the connection is open, send some data to the server
@@ -18,8 +21,11 @@ export default class extends Phaser.State {
       };
 
       this.websocket.onmessage = function (message) {
-          console.log("Message Incoming ... ")
           console.log(message.data);
+          if (message.data == "down")
+              self.spaceShip.thrustOn();
+          else
+              self.spaceShip.thrustOff();
       }
   }
 

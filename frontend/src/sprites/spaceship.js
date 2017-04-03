@@ -6,6 +6,7 @@ export default class extends Phaser.Sprite {
         this.anchor.setTo(0.5)
         //  Game input
         this.cursors = game.input.keyboard.createCursorKeys();
+        this.thrust = false;
     }
 
     initializePhysics() {
@@ -16,8 +17,17 @@ export default class extends Phaser.Sprite {
         this.body.bounce.setTo(0.4, 0.4);
     }
 
+    thrustOn() {
+        this.thrust = true;
+    }
+
+    thrustOff() {
+        this.thrust = false;
+    }
+
+
     update () {
-        if (this.cursors.up.isDown)
+        if (this.thrust)
         {
             this.game.physics.arcade.accelerationFromRotation(this.rotation - Math.PI / 2, 350, this.body.acceleration);
         }
@@ -26,7 +36,7 @@ export default class extends Phaser.Sprite {
             this.body.acceleration.set(0);
         }
 
-        if (this.cursors.left.isDown)
+       /* if (this.cursors.left.isDown)
         {
             this.body.angularVelocity = -300;
         }
@@ -39,7 +49,7 @@ export default class extends Phaser.Sprite {
             this.body.angularVelocity = 0;
         }
 
-        this.game.worldBoaderCollide(this);
+        this.game.worldBoaderCollide(this);*/
     }
 
 }

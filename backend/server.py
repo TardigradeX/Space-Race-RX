@@ -17,24 +17,32 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def __init__(self, *args, **kwargs):
         super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
+        self.clients=[]
+
+    def register(self, client):
+        self.clients.append(client);
+
+    def unregister(self, client):
+        self.clients.remove(client)
+
+    def communicate(self, incomingClient, payload, isBinary):
+        for client in self.clients:
+            if client.peer != incomingClient.peer:
+                client.sendMessage(payload)
+
 
 
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
-    def onConnect(self, request):
-        print("some request connected {}".format(request))
+    def onOpen(self):
+        self.factory.register(self)
+
+    def connectionLost(self, reason):
+        self.factory.unregister(self)
 
     def onMessage(self, payload, isBinary):
-        print("SENDING MESSAGE .....")
-        self.sendMessage(payload, False)
-        print("Message sent outtttt .....")
-
-    def onClose(self):
-        print("Closing connection")
-        """self.onClose()"""
-
-
+        self.factory.communicate(self, payload, isBinary)
 
 
 if __name__ == "__main__":
