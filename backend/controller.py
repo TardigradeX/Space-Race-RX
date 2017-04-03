@@ -11,9 +11,13 @@ class MyClientFactory(WebSocketClientFactory):
     roomid = None
 
     def __init__(self, *args, **kwargs):
-        super(MyClientProtocol, self).__init__(*args, **kwargs)
+        print(kwargs)
+        roomid = kwargs.pop('roomid')
+        print(roomid)
+
+        super(MyClientFactory, self).__init__(*args, **kwargs)
         self.isMaster = False
-        self.roomid = None
+        self.roomid = roomid
 
 class MyClientProtocol(WebSocketClientProtocol):
 
@@ -26,10 +30,11 @@ class MyClientProtocol(WebSocketClientProtocol):
 
     def onOpen(self):
         print("WebSocket connection open.")
-        ui = input(u'Enter room id here:\n')
-        granted = False
-        while not granted:
-            self.sendLogin(self, ui)
+        # ui = input(u'Enter room id here:\n')
+        roomid = self.factory.roomid
+        self.sendLogin(self, roomid)
+        # while not granted:
+        #     self.sendLogin(self, ui)
 
 
         # check if login granted
@@ -45,9 +50,11 @@ class MyClientProtocol(WebSocketClientProtocol):
 
 
 if __name__ == '__main__':
+    roomid = sys.argv[1]
+
     log.startLogging(sys.stdout)
 
-    factory = WebSocketClientFactory(u"ws://127.0.0.1:9000/ws")
+    factory = MyClientFactory(u"ws://127.0.0.1:9000/ws", roomid = roomid)
     factory.protocol = MyClientProtocol
 
     reactor.connectTCP("127.0.0.1", 9000, factory)
