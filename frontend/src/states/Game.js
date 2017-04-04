@@ -1,6 +1,7 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import SpaceShip from '../sprites/spaceship'
+import SpaceShipFactory from "../sprites/SpaceShipFactory";
 
 export default class extends Phaser.State {
   init () {
@@ -39,16 +40,9 @@ export default class extends Phaser.State {
     banner.smoothed = false;
     banner.anchor.setTo(0.5);
 
-    this.spaceShip = new SpaceShip({
-      game: this,
-      x: this.world.centerX,
-      y: this.world.centerY,
-      asset: 'spaceship'
-    });
+    this.factory = new SpaceShipFactory({game:this.game});
 
-    this.game.add.existing(this.spaceShip);
-    this.game.physics.enable(this.spaceShip, Phaser.Physics.ARCADE);
-    this.spaceShip.initializePhysics();
+    this.spaceShip = this.factory.getSpaceShip(this.world.centerX, this.world.centerY, 'spaceship');
   }
 
   render () {
@@ -56,6 +50,32 @@ export default class extends Phaser.State {
       this.game.debug.spriteInfo(this.spaceShip, 32, 32)
     }
   }
+
+    update () {
+        if (this.spaceShip.thrust)
+        {
+            this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 350, this.spaceShip.body.acceleration);
+        }
+        else
+        {
+            this.spaceShip.body.acceleration.set(0);
+        }
+
+        /* if (this.cursors.left.isDown)
+         {
+         this.body.angularVelocity = -300;
+         }
+         else if (this.cursors.right.isDown)
+         {
+         this.body.angularVelocity = 300;
+         }
+         else
+         {
+         this.body.angularVelocity = 0;
+         }
+
+         this.game.worldBoaderCollide(this);*/
+    }
 
 
   worldBoaderCollide(sprite) {
