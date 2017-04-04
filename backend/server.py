@@ -1,5 +1,11 @@
 import sys
 import random
+import re
+import enum
+
+from Room import Room
+from User import User
+from Commands import Commands
 
 from twisted.web.static import File
 from twisted.python import log
@@ -11,83 +17,92 @@ from autobahn.twisted.websocket import WebSocketServerFactory, \
 
 from autobahn.twisted.resource import WebSocketResource
 
-
-class SpaceRaceRXProtocol(WebSocketServerProtocol):
-
-    def onConnect(self, response):
-        print("Connected to Server: {}".format(response.peer))
-
-    def onOpen(self):
-        """
-        Connection from client is opened. Fires after opening
-        websockets handshake has been completed and we can send
-        and receive messages.
-
-        Register client in factory, so that it is able to track it.
-        Try to find conversation partner for this client.
-        """
-        self.factory.register(self)
-        self.factory.findPartner(self)
-
-    def connectionLost(self, reason):
-        """
-        Client lost connection, either disconnected or some error.
-        Remove client from list of tracked connections.
-        """
-        self.factory.unregister(self)
-
-    def onMessage(self, payload, isBinary):
-        """
-        Message sent from client, communicate this message to its conversation partner,
-        """
-        self.factory.communicate(self, payload, isBinary)
-
-    def onClose(self):
-        print("Connection closed")
-
-
 class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def __init__(self, *args, **kwargs):
         super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
-        self.clients = {}
 
-    def register(self, client):
-        """
-        Add client to list of managed connections.
-        """
-        self.clients[client.peer] = {"object": client, "partner": None}
+        self.roomService = {}
+        self.hangmans = []  # aka dangling clients, without room nor master/controller assignment
+        self.roomid = 0
+
+    def addHangman(self, peer):
+        self.hangmans.append(peer)
+
+    def addRoom(self, client):
+        peer = client.peer
+
+        if peer not in self.roomService:
+            self.hangmans.remove(client.peer)
+            print("Adding room")
+            user1 = User(peer, self.roomid, isMaster = True)
+            room1 = Room(user1)
+            self.roomService[self.roomid] = room1
+            # x.sendMessage((u"Room number: " + room1.roomid()).encode('utf8'), isBinary = False)
+            self.roomid += 1
+        return(self.roomid - 1)
+
+    def delRoom(self, roomid):
+        """ Remove all clients before deleting """
+        print("Closing connection to clients")
+        ## master is still in list, fix it
+        usersLeft = self.roomService[roomid].getAllUser()[::-1] # controllers first, master last
+
+        print("Deleting room")
+        self.roomService.pop(roomid)
+        return(usersLeft)
+
+    def registerController(self, peer, roomid):
+        if not roomid in self.roomService:
+            raise Exception("Room not available")
+        print('Adding controller to room')
+        user1 = User(peer, roomid, isMaster = False)
+        self.roomService[roomid].addController(user1)
+
+    def unregisterController(self, peer, roomid):
+        self.roomService[roomid].delController(peer)
 
     def unregister(self, client):
-        """
-        Remove client from list of managed connections.
-        """
-        self.clients.pop(client.peer)
+        print("Unregistering client")
+        for roomid in self.roomService.keys():
+            room = self.roomService[roomid]
+            if client.peer in room.getMaster().peer():
+                self.delRoom(roomid)
+                break
+            if client.peer in [x.peer() for x in room.getControllers()]:
+                room.delController(client.peer)
+                break
 
-    def findPartner(self, client):
-        """
-        Find chat partner for a client. Check if there any of tracked clients
-        is idle. If there is no idle client just exit quietly. If there is
-        available partner assign him/her to our client.
-        """
-        available_partners = [c for c in self.clients if c != client.peer and not self.clients[c]["partner"]]
-        if not available_partners:
-            print("no partners for {} check in a moment".format(client.peer))
-        else:
-            partner_key = random.choice(available_partners)
-            self.clients[partner_key]["partner"] = client
-            self.clients[client.peer]["partner"] = self.clients[partner_key]["object"]
+class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
-    def communicate(self, client, payload, isBinary):
-        """
-        Broker message from client to its partner.
-        """
-        c = self.clients[client.peer]
-        if not c["partner"]:
-            c["object"].sendMessage("Sorry you dont have partner yet, check back in a minute".encode('utf8'), isBinary=False)
-        else:
-            c["partner"].sendMessage(payload, isBinary)
+    def sendMessage2(self, payload):
+        self.sendMessage(payload.encode('utf8'), False)
 
+    def parseMessage(self, payload):
+        pattern = re.compile('.+|.+|.+')
+        isCmd = (pattern.search(payload) == True)
+        cmd, target, payload = payload.split('|')
+
+        if cmd == Commands.LOGINMASTER:
+            self.factory.addRoom(self)
+        elif cmd == Commands.LOGINCONTROLLER:
+            roomid = target ## requires parsing
+            self.factory.registerController(self, roomid)
+
+    def onConnect(self, request):
+        print("Connected to Server: {}".format(request.peer))
+        # how to identify whether request is master or client?
+        self.factory.addHangman(request.peer)
+        self.sendMessage(("Welcome" + request.peer).encode('utf8'), isBinary = False)
+
+    def onMessage(self, payload, isBinary):
+        pay1 = payload.decode('utf8')
+        print(self.peer + ": " + pay1) # which peer?
+        self.parseMessage(pay1)
+        print("Message parsed")
+
+    def onClose(self, wasClean, code, reason):
+        self.factory.unregister(self)
 
 if __name__ == "__main__":
     port = 9000 # tcp port
@@ -106,5 +121,5 @@ if __name__ == "__main__":
     site = Site(root)
     reactor.listenTCP(port, site)
     # reactor.listenTCP(8080, factory)
-    
+
     reactor.run()
