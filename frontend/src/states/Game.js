@@ -22,11 +22,15 @@ export default class extends Phaser.State {
       };
 
       this.websocket.onmessage = function (message) {
-          console.log(message.data);
-          if (message.data == "down")
-              self.spaceShip.thrustOn();
-          else
-              self.spaceShip.thrustOff();
+          //console.log(message.data);
+          if (message.data == "left_down")
+              self.spaceShip.thrustLeftOn();
+          else if (message.data == "left_up")
+              self.spaceShip.thrustLeftOff();
+          else if (message.data == "right_down")
+              self.spaceShip.thrustRightOn();
+          else if (message.data == "right_up")
+              self.spaceShip.thrustRightOff();
       }
   }
 
@@ -52,29 +56,26 @@ export default class extends Phaser.State {
   }
 
     update () {
-        if (this.spaceShip.thrust)
-        {
+      console.log(this.spaceShip.thrustLeft);
+      console.log(this.spaceShip.thrustRight);
+      console.log(".............................");
+
+        if (this.spaceShip.thrustLeft && this.spaceShip.thrustRight) {
             this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 350, this.spaceShip.body.acceleration);
         }
-        else
-        {
+        else if (this.spaceShip.thrustLeft && !this.spaceShip.thrustRight) {
+            this.spaceShip.body.angularVelocity = -300;
             this.spaceShip.body.acceleration.set(0);
         }
+        else if (this.spaceShip.thrustRight && !this.spaceShip.thrustLeft) {
+            this.spaceShip.body.angularVelocity = 300;
+            this.spaceShip.body.acceleration.set(0);
+        }
+        else {
+                this.spaceShip.body.angularVelocity = 0;
+                this.spaceShip.body.acceleration.set(0);
+        }
 
-        /* if (this.cursors.left.isDown)
-         {
-         this.body.angularVelocity = -300;
-         }
-         else if (this.cursors.right.isDown)
-         {
-         this.body.angularVelocity = 300;
-         }
-         else
-         {
-         this.body.angularVelocity = 0;
-         }
-
-         this.game.worldBoaderCollide(this);*/
     }
 
 

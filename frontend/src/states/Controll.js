@@ -25,10 +25,15 @@ export default class extends Phaser.State {
     }
 
     create () {
-        this.buttonBoost = this.game.add.button(this.game.world.centerX - 95, 200, 'button', this.nothing, this, 2, 1, 0);
+        this.buttonBoostLeft = this.game.add.button(32, this.game.world.centerY/2, 'button', this.nothing, this, 2, 1, 0);
+        this.buttonBoostRight = this.game.add.button(300, this.game.world.centerY/2, 'button', this.nothing, this, 2, 1, 0);
 
-        this.buttonBoost.onInputDown.add(this.onDown, this);
-        this.buttonBoost.onInputUp.add(this.onUp, this);
+
+        this.buttonBoostLeft.onInputDown.add(this.onDownLeft, this);
+        this.buttonBoostLeft.onInputUp.add(this.onUpLeft, this);
+
+        this.buttonBoostRight.onInputDown.add(this.onDownRight, this);
+        this.buttonBoostRight.onInputUp.add(this.onUpRight, this);
 
     }
 
@@ -36,12 +41,20 @@ export default class extends Phaser.State {
 
     }
 
-    onDown() {
-        this.websocket.send('down');
+    onDownLeft() {
+        this.websocket.send('left_down');
     }
 
-    onUp() {
-        this.websocket.send('up');
+    onUpLeft() {
+        this.websocket.send('left_up');
+    }
+
+    onDownRight() {
+        this.websocket.send('right_down');
+    }
+
+    onUpRight() {
+        this.websocket.send('right_up');
     }
 
 
