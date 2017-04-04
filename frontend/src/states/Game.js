@@ -1,10 +1,31 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import SpaceShip from '../sprites/spaceship'
+import SpaceShipFactory from "../sprites/SpaceShipFactory";
 
 export default class extends Phaser.State {
-  init () {}
-  preload () {}
+  init () {
+  }
+  preload () {
+      self = this
+
+      this.websocket = new WebSocket("ws://localhost:9000/ws");
+
+      // When the connection is open, send some data to the server
+      this.websocket.onopen = function () {
+          console.log("OPENED MASTER SOCKET");
+      };
+
+      // Log errors
+      this.websocket.onerror = function (error) {
+          console.log('WebSocket Error ' + error);
+      };
+
+      this.websocket.onmessage = function (message) {
+          console.log(message.data);
+          self.spaceShip.movement = message.data;
+      }
+  }
 
   create () {
     const bannerText = 'Xander s Test';
@@ -16,16 +37,9 @@ export default class extends Phaser.State {
     banner.smoothed = false;
     banner.anchor.setTo(0.5);
 
-    this.spaceShip = new SpaceShip({
-      game: this,
-      x: this.world.centerX,
-      y: this.world.centerY,
-      asset: 'spaceship'
-    });
+    this.factory = new SpaceShipFactory({game:this.game});
 
-    this.game.add.existing(this.spaceShip);
-    this.game.physics.enable(this.spaceShip, Phaser.Physics.ARCADE);
-    this.spaceShip.initializePhysics();
+    this.spaceShip = this.factory.getSpaceShip(this.world.centerX, this.world.centerY, 'spaceship');
   }
 
   render () {
@@ -33,6 +47,25 @@ export default class extends Phaser.State {
       this.game.debug.spriteInfo(this.spaceShip, 32, 32)
     }
   }
+
+    update () {
+
+        if (this.spaceShip.movement == 'thrust') {
+            this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 350, this.spaceShip.body.acceleration);
+        } else {
+            this.spaceShip.body.acceleration.set(0);
+        }
+
+        if (this.spaceShip.movement == 'left') {
+            this.spaceShip.body.angularVelocity = -300;
+        }
+        else if (this.spaceShip.movement == 'right') {
+            this.spaceShip.body.angularVelocity = 300;
+        } else {
+            this.spaceShip.body.angularVelocity = 0;
+        }
+
+    }
 
 
   worldBoaderCollide(sprite) {
@@ -56,6 +89,6 @@ export default class extends Phaser.State {
   }
 
     worldCollision() {
-        this.state.start('GameOver')
+        //this.state.start('GameOver')
     }
 }
