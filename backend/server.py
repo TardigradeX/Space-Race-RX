@@ -1,7 +1,11 @@
 import sys
 import random
 import re
+import enum
 
+from Room import Room
+from User import User
+from Commands import Commands
 
 from twisted.web.static import File
 from twisted.python import log
@@ -17,182 +21,95 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def __init__(self, *args, **kwargs):
         super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
-        # since connection order is 1) master and 2) controller, this works.
-        # Functions for masterDict:
-        # - register master
-        # - unregister master
-        # - register controller to master
-        # - unregister controller from master
-        # - create variable to map master.peer (internal use) to master.id (external use)
-        #
-        self.masterDict = {} # masterDict <master peer>:[controller.peer1, ..., controller.peer4]
-        self.masterMap = {} # masterMap <masteruid>:<master peer> ## used to map controller to master
-        self.ctrl = {} # ctrl <controller peer>:[<master peer>, <masterid>]
-        self.masterid = -1
 
-    def registerMaster(self, client):
-        """
-        Registering a master, if not exist:
-        - generate masterid
-        - create list of master.peer for 4 players (track in self.masterDict)
-        - provide mapping of masterid to master.peer
-        """
-        if client not in self.masterDict:
-            print("registered client {}".format(client.peer))
-            masterid = str(self.masterid + 1).zfill(4)
-            self.masterid += 1
+        self.roomService = {}
+        self.hangmans = []  # aka dangling clients, without room nor master/controller assignment
+        self.roomid = 0
 
-            self.masterDict[client.peer] = [None]*4
-            self.masterMap[masterid] = client.peer
-            return((client.peer,masterid)) # returns peer and master id
-        else:
-            print("Master is already registered")
-            return((None,-1))
+    def addHangman(self, peer):
+        self.hangmans.append(peer)
 
-    def unregisterMaster(self, client):
-        ctrllrList = self.masterDict.pop(client.peer)
-        masterid = -1
-        for k in self.masterMap:
-            if self.masterMap[k] == client.peer:
-                masterid = self.masterMap.pop(k)
-                break
-        print('Removed ' + client.peer + " with id " + masterid + " from masterMap")
+    def addRoom(self, client):
+        peer = client.peer
+        self.hangmans.remove(client.peer) # drop peer from hangmans
 
-        # non-empty controller list
+        if peer not in self.roomService:
+            print("Adding room")
+            user1 = User(peer, self.roomid, isMaster = True)
+            room1 = Room(user1)
+            self.roomService[self.roomid] = room1
+            # x.sendMessage((u"Room number: " + room1.roomid()).encode('utf8'), isBinary = False)
+            self.roomid += 1
+        return(self.roomid - 1)
 
-        leftCtrllr = any([x != None for x in ctrllrList])
-        print("Any controllers left: " + str(leftCtrllr))
-        if leftCtrllr:
-            ## remove left over controllers first
-            pass
+    def delRoom(self, roomid):
+        """ Remove all clients before deleting """
+        print("Closing connection to clients")
+        usersLeft = self.roomService[roomid].getAllUser()[::-1] # controllers first, master last
+        # for c in users:
+        #     c.sendClose()
 
-        return((client.peer, masterid))
+        print("Deleting room")
+        self.roomService.pop(roomid)
+        return(usersLeft)
 
-    def registerController(self, client, masterid):
-        """
-        Registering a controller requires a master to exists, which it is assigned to.
-        This requires checks: 1) does master exist, if so 2) is it free
-        if checks passed:
-            1) identify master
-            2) register controller to master
-                - Add controller to the smallest slot (built-in index(a) returns SMALLEST index of a)
-            3) register master to controller
-        """
-        masteroccupied = self.checkMaster(masterid)
-        if masteroccupied:
-            print("No master for controller " + client.peer + " available")
-            if masteroccupied == 1:
-                print('--- due to missing master')
-            if masteroccupied == 2:
-                print('--- due to max number players reached')
-            return((None, -1))
+    def registerController(self, peer, roomid):
+        if not roomid in self.roomService:
+            raise Exception("Room not available")
+        print('Adding controller to room')
+        user1 = User(peer, roomid, isMaster = False)
+        self.roomService[roomid].addController(user1)
 
-        if client not in self.masterDict:
-            print("registered client {}".format(client.peer))
-            # add controller to smallest available slot
-            masterpeer = self.masterMap[masterid]
-            l1 = self.masterDict[masterpeer]
-            i1 = l1.index(None) # return first index of empty player slot
-
-            self.masterDict[masterpeer][i1] = client.peer
-            self.ctrl[client.peer] = [masterpeer, masterid]
-        return((client.peer, self.ctrl[client.peer][1])) # return peer and master uid
-
-    def checkMaster(self, masterid):
-        if not masterid in self.masterMap: ## master id must exist
-            return 1
-        n = [1 for x in self.masterDict[self.masterMap[masterid]] if x == None]
-
-        if sum(n) < 1: ## no slots free
-            return 2
-
-        return 0
-
-    def unregisterController(self, client):
-        masterpeer, masterid = self.ctrl[client.peer]
-        clientcheck = (client.peer in self.masterDict[masterpeer])
-        if not clientcheck:
-            print('Client not assigned to master - where is it?')
-        clientpeer = self.ctrl.pop(client.peer)
-        masterpeer = self.masterMap.pop(masterid)
-        print('Client removed from master ' + masterid)
-        return((clientpeer, masterpeer))
+    def unregisterController(self, peer, roomid):
+        self.roomService[roomid].delController(peer)
 
     def unregister(self, client):
-        """
-        Remove client from list of managed connections.
-        """
-        if client.peer in self.masterDict and client.peer in self.ctrl:
-            print("Something went wrong in unregistering, since client peer is found in"+ \
-            "master and ctrl dict")
-            return(1)
+        print("Unregistering client")
+        for roomid in self.roomService.keys():
+            room = self.roomService[roomid]
+            if client.peer in room.getMaster().peer():
+                self.delRoom(roomid)
+                break
+            if client.peer in [x.peer() for x in room.getControllers()]:
+                room.delController(client.peer)
+                break
 
-        if client.peer in self.masterDict:
-            self.unregisterMaster(client)
-        if client.peer in self.ctrl:
-            self.unregisterController(client)
-
-    def broadcast(self, msg):
-        print("broadcasting message '{}' ..".format(msg))
-        for c in self.clients:
-            c.sendMessage(msg.encode('utf8'), False)
-            print("message sent to {}".format(c.peer))
+    # def broadcast(self, msg):
+    #     print("broadcasting message '{}' ..".format(msg))
+    #     for c in self.clients:
+    #         c.sendMessage(msg.encode('utf8'), False)
+    #         print("message sent to {}".format(c.peer))
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
-
-    def parseLogin(self, payload):
-        print(payload)
-        pattern = re.compile(u'<.+>:.+')
-        if bool(pattern.search(payload)):
-            c = payload.split(":")
-            if c[0] == "<loginrequest>":
-
-                if c[1] == 'master':
-                    print('Registering master')
-                    masterpeer, masterid = self.factory.registerMaster(self)
-                    print("Master " + masterpeer + " registered with id " + masterid)
-                    self.sendMessage2("<logingranted>:master:"+ str(masterid))
-
-                elif c[1] == 'controller':
-                    print('Registering controller for master ' + c[2])
-                    controllerpeer, masterid = self.factory.registerController(self, c[2])
-                    if not controllerpeer == None:
-                        self.sendMessage2("<logingranted>:controller:master" +c[2])
-                    else:
-                        self.sendMessage2('<logingranted>:false')
-            else:
-                print('Command not recognized')
-                self.sendMessage2("login denied")
-                self.close()
-
-    def onConnect(self, request):
-        print("Connected to Server: {}".format(request.peer))
-        print("Assigned masters:")
-        print(self.factory.masterDict)
-
-    def connectionLost(self, reason):
-        self.factory.unregister(self)
-        print("Assigned masters:")
-        print(self.factory.masterDict)
-
-    def onMessage(self, payload, isBinary):
-        pay1 = payload.decode('utf8')
-        print(self.peer + ": " + pay1)
-        self.parseLogin(pay1)
 
     def sendMessage2(self, payload):
         self.sendMessage(payload.encode('utf8'), False)
 
-    def sendClose(self, code = None, reason = None):
-        print("Announce closing with " + self.peer)
-        """self.sendClose(code, reason)"""
+    def parseMessage(self, payload):
+        pattern = re.compile('.+|.+|.+')
+        isCmd = (pattern.search(payload) == True)
+        cmd, target, payload = payload.split('|')
 
-    def onClose(self):
-        print("Closing connection")
-        """self.onClose()"""
+        if cmd == Commands.LOGINMASTER:
+            self.factory.addRoom(self)
+        elif cmd == Commands.LOGINCONTROLLER:
+            roomid = target ## requires parsing
+            self.factory.registerController(self, roomid)
 
+    def onConnect(self, request):
+        print("Connected to Server: {}".format(request.peer))
+        # how to identify whether request is master or client?
+        self.factory.addHangman(request.peer)
+        self.sendMessage(("Welcome" + request.peer).encode('utf8'), isBinary = False)
 
+    def onMessage(self, payload, isBinary):
+        pay1 = payload.decode('utf8')
+        print(self.peer + ": " + pay1) # which peer?
+        self.parseMessage(pay1)
+        print("Message parsed")
 
+    def onClose(self, wasClean, code, reason):
+        self.factory.unregister(self)
 
 if __name__ == "__main__":
     port = 9000 # tcp port

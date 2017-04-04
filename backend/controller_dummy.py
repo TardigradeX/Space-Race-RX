@@ -8,8 +8,6 @@ from autobahn.twisted.websocket import WebSocketClientProtocol, \
 
 class MyClientFactory(WebSocketClientFactory):
 
-    roomid = None
-
     def __init__(self, *args, **kwargs):
         print(kwargs)
         roomid = kwargs.pop('roomid')
@@ -22,7 +20,7 @@ class MyClientFactory(WebSocketClientFactory):
 class MyClientProtocol(WebSocketClientProtocol):
 
     def sendLogin(self, client, roomid):
-        loginrequest = u"<loginrequest>:controller:"+roomid
+        loginrequest = u"loginrequest|" + roomid + "|hello from controller"
         self.sendMessage(loginrequest.encode('utf8'), False)
 
     def onConnect(self, response):
@@ -42,12 +40,9 @@ class MyClientProtocol(WebSocketClientProtocol):
     def onMessage(self, payload, isBinary):
         print(payload.decode('utf8'))
 
-    def sendClose(self, code = None, reason = None):
-        """self.sendClose()"""
-
     def onClose(self, wasClean, code, reason):
+        self.sendMessage(('logout|'+self.factory.roomid+'|goodbye from controller').encode('utf8'), isBinary = True)
         print("WebSocket connection closed: {0}".format(reason))
-
 
 if __name__ == '__main__':
     roomid = sys.argv[1]
