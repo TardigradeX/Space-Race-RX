@@ -4,25 +4,12 @@ export default class extends Phaser.Sprite {
     constructor ({ game, x, y, asset }) {
         super(game, x, y, asset);
         this.anchor.setTo(0.5);
-        this.thrustLeft = false;
-        this.thrustRight = false;
+        this.movement = "none";
     }
 
 
-    thrustLeftOn() {
-        this.thrustLeft = true;
-    }
-
-    thrustLeftOff() {
-        this.thrustLeft = false;
-    }
-
-    thrustRightOn() {
-        this.thrustRight = true;
-    }
-
-    thrustRightOff() {
-        this.thrustRight = false;
+    setMovement(movement) {
+        this.movement = movement;
     }
 
 }

@@ -22,15 +22,8 @@ export default class extends Phaser.State {
       };
 
       this.websocket.onmessage = function (message) {
-          //console.log(message.data);
-          if (message.data == "left_down")
-              self.spaceShip.thrustLeftOn();
-          else if (message.data == "left_up")
-              self.spaceShip.thrustLeftOff();
-          else if (message.data == "right_down")
-              self.spaceShip.thrustRightOn();
-          else if (message.data == "right_up")
-              self.spaceShip.thrustRightOff();
+          console.log(message.data);
+          self.spaceShip.movement = message.data;
       }
   }
 
@@ -56,24 +49,20 @@ export default class extends Phaser.State {
   }
 
     update () {
-      console.log(this.spaceShip.thrustLeft);
-      console.log(this.spaceShip.thrustRight);
-      console.log(".............................");
 
-        if (this.spaceShip.thrustLeft && this.spaceShip.thrustRight) {
+        if (this.spaceShip.movement == 'thrust') {
             this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 350, this.spaceShip.body.acceleration);
+        } else {
+            this.spaceShip.body.acceleration.set(0);
         }
-        else if (this.spaceShip.thrustLeft && !this.spaceShip.thrustRight) {
+
+        if (this.spaceShip.movement == 'left') {
             this.spaceShip.body.angularVelocity = -300;
-            this.spaceShip.body.acceleration.set(0);
         }
-        else if (this.spaceShip.thrustRight && !this.spaceShip.thrustLeft) {
+        else if (this.spaceShip.movement == 'right') {
             this.spaceShip.body.angularVelocity = 300;
-            this.spaceShip.body.acceleration.set(0);
-        }
-        else {
-                this.spaceShip.body.angularVelocity = 0;
-                this.spaceShip.body.acceleration.set(0);
+        } else {
+            this.spaceShip.body.angularVelocity = 0;
         }
 
     }
