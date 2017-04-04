@@ -31,9 +31,9 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def addRoom(self, client):
         peer = client.peer
-        self.hangmans.remove(client.peer) # drop peer from hangmans
 
         if peer not in self.roomService:
+            self.hangmans.remove(client.peer)
             print("Adding room")
             user1 = User(peer, self.roomid, isMaster = True)
             room1 = Room(user1)
@@ -45,9 +45,8 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
     def delRoom(self, roomid):
         """ Remove all clients before deleting """
         print("Closing connection to clients")
+        ## master is still in list, fix it
         usersLeft = self.roomService[roomid].getAllUser()[::-1] # controllers first, master last
-        # for c in users:
-        #     c.sendClose()
 
         print("Deleting room")
         self.roomService.pop(roomid)
@@ -73,12 +72,6 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
             if client.peer in [x.peer() for x in room.getControllers()]:
                 room.delController(client.peer)
                 break
-
-    # def broadcast(self, msg):
-    #     print("broadcasting message '{}' ..".format(msg))
-    #     for c in self.clients:
-    #         c.sendMessage(msg.encode('utf8'), False)
-    #         print("message sent to {}".format(c.peer))
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 

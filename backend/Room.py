@@ -2,13 +2,13 @@
 
 class Room(object):
     def __init__(self, User):
+        if not User.isMaster():
+            raise Exception("Not a master user")
+
         roomid = User.roomid()
         if type(roomid) == type(int()):
             roomid = str(roomid).zfill(4)
-        self.__roomid = User.roomid()
-
-        if not User.isMaster():
-            raise Exception("Not a master user")
+        self.__roomid = roomid
 
         self.__master = User
 
@@ -20,6 +20,8 @@ class Room(object):
         if n > 0:
             i = self.__controller.index(None)
             self.__controller[i] = peer
+        else:
+            pass 
 
     def delController(self, peer):
         """ remove controller from list """

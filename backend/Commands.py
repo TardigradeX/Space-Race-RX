@@ -8,7 +8,6 @@ class Commands(str, Enum):
     LOGINCONTROLLER = "login"
     LOGOUT = 'logout'
 
-    LEFTROLL = "up"
-    RIGHTROLL = "down"
+    LEFTROLL = "left"
+    RIGHTROLL = "right"
     THRUST = "thrust"
-    
