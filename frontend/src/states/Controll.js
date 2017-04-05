@@ -2,9 +2,10 @@ import Phaser from 'phaser'
 import { centerGameObjects } from '../utils'
 
 export default class extends Phaser.State {
-    init () {}
+    init() {
+    }
 
-    preload () {
+    preload() {
         this.websocket = new WebSocket("ws://192.168.2.166:9000/ws");
 
         // When the connection is open, send some data to the server
@@ -22,78 +23,90 @@ export default class extends Phaser.State {
             console.log(message.data);
         }
 
-        this.called = 0;
         this.leftDown = false;
         this.rightDown = false;
+        this.thrustDown = false;
     }
 
-    create () {
-        this.game.input.addPointer();
-        this.game.input.addPointer();
+    create() {
+        this.thrustButton = this.game.add.button(150, this.game.world.centerY / 2, 'button', null, this, 0, 1, 0, 1);
+        this.thrustButton.events.onInputOver.add(function () {
+            this.thrustDown = true;
+            this.controll()
+        }, this);
+       /* this.thrustButton.events.onInputOut.add(function () {
+            this.thrustDown = false;
+            this.controll()
+        }, this);*/
+        this.thrustButton.events.onInputDown.add(function () {
+            this.thrustDown = true;
+            this.controll()
+        }, this);
+        this.thrustButton.events.onInputUp.add(function () {
+            this.thrustDown = false;
+            this.controll()
+        }, this);
 
-        // This one registers a mouse click handler that will be called
-        this.game.input.maxPointers = 2;
-        this.game.input.touch.onTouchEnter(this.testPointer, this);
-        this.game.input.touch.onTouchLeave(this.testPointer, this);
+        this.buttonBoostRight = this.game.add.button(300, this.game.world.centerY / 2, 'button', null, this, 0, 1, 0, 1);
+        this.buttonBoostRight.events.onInputOver.add(function () {
+            this.rightDown = true;
+            this.controll()
+        }, this);
+        this.buttonBoostRight.events.onInputOut.add(function () {
+            this.rightDown = false;
+            this.controll()
+        }, this);
+        this.buttonBoostRight.events.onInputDown.add(function () {
+            this.rightDown = true;
+            this.controll()
+        }, this);
+        this.buttonBoostRight.events.onInputUp.add(function () {
+            this.rightDown = false;
+            this.controll()
+        }, this);
+
+
+        this.buttonBoostLeft = this.game.add.button(32, this.game.world.centerY / 2, 'button', null, this, 0, 1, 0, 1);
+        this.buttonBoostLeft.events.onInputOver.add(function () {
+            this.leftDown = true;
+            this.controll()
+        }, this);
+        this.buttonBoostLeft.events.onInputOut.add(function () {
+            this.leftDown = false;
+            this.controll()
+        }, this);
+        this.buttonBoostLeft.events.onInputDown.add(function () {
+            this.leftDown = true;
+            this.controll()
+        }, this);
+        this.buttonBoostLeft.events.onInputUp.add(function () {
+            this.leftDown = false;
+            this.controll()
+        }, this);
+
     }
 
 
-
-    nothing() {
-
-    }
-
-
-    testPointer(event) {
-         this.called++;
-         this.leftDown = false;
-         this.rightDown = false;
-
-         for(var pointer of this.game.input.pointers){
-             console.log(pointer.active);
-           if(pointer.active && pointer.clientX < 100 && pointer.clientX > 0) {
-               this.leftDown = true;
-           }
-           if(!pointer.active && pointer.clientX < 100 && pointer.clientX > 0) {
-                 this.leftDown = false;
-           }
-        }
-
-        console.log("________________________");
-
-        /*if(this.leftDown && this.rightDown) {
-            this.websocket.send('thrust');
-        } else if(this.leftDown && !this.rightDown) {
-            this.websocket.send('left');
-        } else if(!this.leftDown && this.rightDown) {
-            this.websocket.send('right');
-        }else if(!this.leftDown && !this.rightDown){
-            this.websocket.send('none');
-        }*/
-
-    }
-
-
-    render() {
-        this.game.debug.pointer(this.game.input.pointer1);
-        this.game.debug.pointer(this.game.input.pointer2);
-
-        this.game.debug.text("PointersSize:" + this.game.input.pointers.length, 0,  20);
-        this.game.debug.text("LEFT:" + this.leftDown, 0,  60);
-        this.game.debug.text("RIGHT:" + this.rightDown, 0,  80);
-        this.game.debug.text("CALLED_Upper:" + this.called, 0,  100);
+    controll() {
 
         if(this.leftDown && this.rightDown) {
-            this.game.debug.text("cmd:thrust", 0,  120);
-        } else if(this.leftDown && !this.rightDown) {
-            this.game.debug.text("cmd: left", 0,  120);
-        } else if(!this.leftDown && this.rightDown) {
-            this.game.debug.text("cmd:right", 0,  120);
-        }else if(!this.leftDown && !this.rightDown){
-            this.game.debug.text("cmd:none", 0,  120);
-        }
+            console.log("thrust");
+            this.websocket.send('thrust');
+         } else if(this.leftDown) {
+            this.websocket.send('left');
+            console.log("left");
+         } else if(this.rightDown) {
+            this.websocket.send('right');
+            console.log("right");
+         }else {
+            this.websocket.send('none');
+            console.log("none");
+         }
+
+
     }
 
 
 }
+
 
