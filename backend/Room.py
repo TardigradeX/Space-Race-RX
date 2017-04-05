@@ -12,20 +12,31 @@ class Room(object):
 
         self.__master = User
 
-        self.__controller = [None]*4
+        self.__controller = [None]*1
 
-    def addController(self, peer):
+    def addController(self, User):
+        success = False
         """ add controller to list, check if valid """
-        n = [1 for x in self.__controller if x == None]
+        n = sum([1 for x in self.__controller if x == None])
+        print("Slots left: " + str(n))
         if n > 0:
             i = self.__controller.index(None)
-            self.__controller[i] = peer
+            self.__controller[i] = User
+            success = True
         else:
-            pass 
+            success = False
+            # User.client().sendMessage2("Room is full. Closing...")
+            # User.client().sendClose()
+
+        return success
 
     def delController(self, peer):
         """ remove controller from list """
-        self.__controller.pop(peer)
+        contpeer = [x.peer() for x in self.__controller if x != None]
+        print(peer, contpeer)
+        i = contpeer.index(peer)
+        del self.__controller[i]
+        print("Removed controller "+ peer + " from room " + self.__roomid)
 
     def getControllers(self):
         return([x for x in self.__controller if x != None])
