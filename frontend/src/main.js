@@ -7,6 +7,7 @@ import SplashState from './states/Splash'
 import GameState from './states/Game'
 import GameOverState from './states/GameOver'
 import DummyDecide from './states/DummyDecide'
+import Lobby from './states/Lobby'
 import Control from './states/Controll'
 
 import config from './config'
@@ -24,6 +25,7 @@ class Game extends Phaser.Game {
     this.state.add('Game', GameState, false)
     this.state.add('GameOver', GameOverState, false);
     this.state.add('DummyDecide', DummyDecide, false);
+    this.state.add('Lobby', Lobby, false);
     this.state.add('Control', Control, false);
     this.state.start('Boot')
 
