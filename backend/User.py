@@ -1,4 +1,3 @@
-from autobahn.twisted.websocket import WebSocketServerProtocol
 
 class User():
 
@@ -6,7 +5,7 @@ class User():
         self.__client = client
         self.__peer = client.peer
         self.peer = self.__peer
-        
+
         if type(roomid) == type(int()):
             roomid = str(roomid).zfill(4)
         self.__roomid = roomid
