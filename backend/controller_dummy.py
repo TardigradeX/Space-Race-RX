@@ -20,7 +20,7 @@ class MyClientFactory(WebSocketClientFactory):
 class MyClientProtocol(WebSocketClientProtocol):
 
     def sendLogin(self, client, roomid):
-        loginrequest = u"loginrequest|" + roomid + "|hello from controller"
+        loginrequest = u"login|" + roomid + "|hello from controller"
         self.sendMessage(loginrequest.encode('utf8'), False)
 
     def onConnect(self, response):
