@@ -31,9 +31,8 @@ class MyClientProtocol(WebSocketClientProtocol):
         # ui = input(u'Enter room id here:\n')
         roomid = self.factory.roomid
         self.sendLogin(self, roomid)
-        # while not granted:
-        #     self.sendLogin(self, ui)
 
+        self.sendMessage(("message|master|Whats up?").encode('utf8'), isBinary = False)
 
         # check if login granted
 

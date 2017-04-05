@@ -15,6 +15,7 @@ class Commands(str, Enum):
     THRUST = "thrust"
 
 class Targets(str, Enum):
+    PLAYER = 'player'
     PLAYER1 = "player1"
     PLAYER2 = "player2"
     PLAYER3 = "player3"
