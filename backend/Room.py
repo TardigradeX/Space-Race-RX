@@ -34,17 +34,17 @@ class Room(object):
 
     def delController(self, peer):
         """ remove controller from list """
-        contpeer = [x.peer() for x in self.__controller if x != None]
+        contpeer = [x.peer for x in self.__controller if x != None]
         print(peer, contpeer)
         i = contpeer.index(peer)
         del self.__controller[i]
         print("Removed controller "+ peer + " from room " + self.__roomid)
 
-    def getControllers(self):
-        return([x for x in self.__controller if x != None])
-
     def getMaster(self):
         return(self.__master)
+
+    def getControllers(self):
+        return([x for x in self.__controller if x != None])
 
     def getAllUser(self):
         return([self.__master] + [x for x in self.__controller if x != None])
