@@ -76,14 +76,13 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
     def unregister(self, client):
         for roomid in self.roomService.keys():
             room = self.roomService[roomid]
-            masterpeer = room.getMaster().peer()
-            controllerpeers = [x.peer() for x in room.getControllers()]
+            masterpeer = room.getMaster().peer
+            controllerpeers = [x.peer for x in room.getControllers()]
             if client.peer in masterpeer:
                 self.delRoom(roomid)
                 break
             if client.peer in controllerpeers:
                 self.unregisterController(client.peer, roomid)
-                # room.delController(client.peer)
                 break
             else:
                 print("Room does not exist")
@@ -104,13 +103,16 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
                     room.getMaster().client().sendMessage2(payload)
 
         elif target.startswith(pController):
+            """requires handling of none existing players"""
             key1 = list(self.roomService.keys())
             masterpeer = [self.roomService[k].master.peer for k in key1]
             print(sourcepeer, masterpeer)
             i = masterpeer.index(sourcepeer)
             j = int(target.replace(Targets.PLAYER, ''))
             print(self.roomService[key1[i]].getAllUser())
+
             self.roomService[key1[i]].getUser(j-1).client().sendMessage2(payload)
+
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
@@ -151,8 +153,8 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         self.parseMessage(pay1)
         print("Message parsed")
 
-    # def onClose(self, wasClean, code, reason):
-        # self.factory.unregister(self)
+    def onClose(self, wasClean, code, reason):
+        self.factory.unregister(self)
 
 if __name__ == "__main__":
     port = 9000 # tcp port
