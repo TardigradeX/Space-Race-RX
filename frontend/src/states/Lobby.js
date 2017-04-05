@@ -14,6 +14,7 @@ export default class extends Phaser.State {
 
       this.websocket.onopen = function () {
           console.log("OPENED SOCKET");
+          this.send('Hi there')
       };
 
       this.websocket.onerror = function (error) {
