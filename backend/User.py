@@ -2,13 +2,17 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 
 class User():
 
-    def __init__(self, peer, roomid, isMaster):
-        self.__peer = peer
+    def __init__(self, client, roomid, isMaster):
+        self.__client = client
+        self.__peer = client.peer
 
         if type(roomid) == type(int()):
             roomid = str(roomid).zfill(4)
         self.__roomid = roomid
         self.__isMaster = isMaster
+
+    def client(self):
+        return(self.__client)
 
     def peer(self):
         return(self.__peer)
