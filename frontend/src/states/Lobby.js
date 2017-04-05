@@ -42,8 +42,12 @@ export default class extends Phaser.State {
     }
 
     aMessage(){
-      console.log("Sending message");
-      this.websocket.send("message|player1|Hey bitch")
+      var rnum = Math.random();
+      var i = (rnum > 0.5) + 1
+      console.log("Sending message to player" + i);
+      var cmd = "message|player"+i+"|Hey bitch"
+      this.websocket.send(cmd)
+
     }
 
     parse(message){

@@ -34,7 +34,6 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 
         if peer not in self.roomService:
             self.hangmans.remove(client.peer)
-            print("Adding room")
             user1 = User(client, self.roomid, isMaster = True)
             room1 = Room(user1)
             self.roomService[room1.roomid()] = room1
@@ -44,11 +43,9 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def delRoom(self, roomid):
         """ Remove all clients before deleting """
-        print("Closing connection to clients")
         ## master is still in list, fix it
         usersLeft = self.roomService[roomid].getAllUser()[::-1] # controllers first, master last
 
-        print("Deleting room")
         try:
             del self.roomService[roomid]
         except Exception as e:
@@ -77,17 +74,14 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
         'Controller ' + peer + ' left')
 
     def unregister(self, client):
-        print("Unregistering ")
         for roomid in self.roomService.keys():
             room = self.roomService[roomid]
             masterpeer = room.getMaster().peer()
             controllerpeers = [x.peer() for x in room.getControllers()]
             if client.peer in masterpeer:
-                print("-- Room")
                 self.delRoom(roomid)
                 break
             if client.peer in controllerpeers:
-                print("-- Controller")
                 self.unregisterController(client.peer, roomid)
                 # room.delController(client.peer)
                 break
@@ -99,7 +93,6 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
         pMaster = Targets.MASTER
 
         if target.startswith(pMaster):
-            print("Message for master")
             """
             1) identify master of controller
             2) send message to master
@@ -111,12 +104,12 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
                     room.getMaster().client().sendMessage2(payload)
 
         elif target.startswith(pController):
-            print('message for controller')
             key1 = list(self.roomService.keys())
             masterpeer = [self.roomService[k].master.peer for k in key1]
             print(sourcepeer, masterpeer)
             i = masterpeer.index(sourcepeer)
-            j = int(target.replace('player', ''))
+            j = int(target.replace(Targets.PLAYER, ''))
+            print(self.roomService[key1[i]].getAllUser())
             self.roomService[key1[i]].getUser(j-1).client().sendMessage2(payload)
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
@@ -133,18 +126,15 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         cmd, target, payload = payload.split('|')
 
         if cmd == Commands.LOGINMASTER:
-            print("Registering master")
             roomid = self.factory.addRoom(self)
             self.sendMessage2('Your assigned room id: ' + str(roomid))
         elif cmd == Commands.LOGINCONTROLLER:
             roomid = target ## requires parsing
-            print("Registering controller to room " + roomid)
             success = self.factory.registerController(self, roomid)
             if not success:
                 self.sendMessage2("Unable to comply")
                 self.sendClose()
         elif cmd == Commands.MESSAGE:
-            print("Receiving a message for " + target)
             self.factory.passMessage(self.peer, target, payload)
         else:
             print("Unknown command")

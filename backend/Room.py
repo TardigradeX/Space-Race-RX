@@ -1,7 +1,7 @@
 
 
 class Room(object):
-    def __init__(self, User):
+    def __init__(self, User, nPlayers = 2):
         if not User.isMaster():
             raise Exception("Not a master user")
 
@@ -13,7 +13,7 @@ class Room(object):
         self.__master = User
         self.master = self.__master
 
-        self.__controller = [None]*1
+        self.__controller = [None]*nPlayers
 
     def addController(self, User):
         success = False
@@ -22,6 +22,7 @@ class Room(object):
         print("Slots left: " + str(n))
         if n > 0:
             i = self.__controller.index(None)
+            print("Added user to slot", i)
             self.__controller[i] = User
             success = True
         else:

@@ -21,3 +21,4 @@ class Targets(str, Enum):
     PLAYER3 = "player3"
     PLAYER4 = "player4"
     MASTER = "master"
+    SERVER = "server"
