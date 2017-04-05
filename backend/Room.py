@@ -11,6 +11,7 @@ class Room(object):
         self.__roomid = roomid
 
         self.__master = User
+        self.master = self.__master
 
         self.__controller = [None]*1
 
@@ -46,6 +47,9 @@ class Room(object):
 
     def getAllUser(self):
         return([self.__master] + [x for x in self.__controller if x != None])
+
+    def getUser(self, i):
+        return(self.__controller[i])
 
     def roomid(self):
         return(self.__roomid)

@@ -94,6 +94,13 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
             else:
                 print("Room does not exist")
 
+    def passMessage(self, sourcepeer, target, payload):
+        key1 = list(self.roomService.keys())
+        masterpeer = [self.roomService[k].master.peer for k in key1]
+        i = masterpeer.index(sourcepeer)
+        j = int(target.replace('player', ''))
+        self.roomService[key1[i]].getUser(j-1).client().sendMessage2(payload)
+
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
     def sendMessage2(self, payload):
@@ -120,8 +127,7 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
                 self.sendClose()
         elif cmd == Commands.MESSAGE:
             print("Receiving a message for " + target)
-
-            # self.factory.sendDirectedMessage(target, payload)
+            self.factory.passMessage(self.peer, target, payload)
         else:
             print("Unknown command")
 
