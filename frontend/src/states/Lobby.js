@@ -1,21 +1,22 @@
 import Phaser from 'phaser'
-import * from "../commands";
+import config from '../config'
+import {DELIMETER, targets, commands, NONE} from "../commands";
 
 export default class extends Phaser.State {
 
     init () {
-      this.isConnected = false
-
+      this.playerCount = 0;
+      this.roomId = "";
     }
 
     preload () {
 
       this.load.image('button', 'assets/images/small_button.png');
-      this.websocket = new WebSocket("ws://localhost:9000/ws");
+      this.websocket = new WebSocket(config.wsServerAddress);
 
       this.websocket.onopen = function () {
           console.log("OPENED SOCKET");
-          this.send(LOGINMASTER + DELIMETER + SERVER + DELIMETER + NONE)
+          this.send(commands.LOGINMASTER + DELIMETER + targets.SERVER + DELIMETER + NONE)
       };
 
       this.websocket.onerror = function (error) {
@@ -25,7 +26,8 @@ export default class extends Phaser.State {
       this.websocket.onmessage = function (message) {
           console.log("Message Incoming ... ")
           console.log(message.data);
-      };
+          this.roomId = message.data;
+      }.bind(this);
 
       this.websocket.onclose = function(close){
         this.send("logout|room|byebye")
@@ -48,8 +50,27 @@ export default class extends Phaser.State {
         target = mySplit[1]
         payload = mySplit[2]
         if (cmd == 'signup'){
-          console.log('Player1 signed up. ' + message);
+          console.log('Player signed up. ' + message);
+          this.playerCount ++;
         }
       }
+    }
+
+    update (){
+        if(this.roomId.length > 0) {
+            let text= this.game.add.text(this.game.width / 2, (this.game.height / 5 ) * 4, this.roomId);
+            text.anchor.x = 0.5;
+            text.anchor.y = 0.2;
+        }
+
+        if(this.playerCount > 0) {
+            let style = { font: "20px Courier", fill: "#fff", tabs: 132 };
+            let players = "";
+            for(let i = 0; i < this.playerCount; i++) {
+                players += "Player "+i+"\t";
+            }
+            this.game.add.text(100, 64, players.slice(0,-1), style);
+        }
+
     }
 }
