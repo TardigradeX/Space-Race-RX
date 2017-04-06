@@ -26,11 +26,11 @@ export default class extends Phaser.State {
 
 
     onMaster () {
-        this.state.start('Game')
+        this.state.start('Lobby')
     }
 
     onController() {
-        this.state.start('Control')
+        this.state.start('GamePadLobby')
     }
 
 }
