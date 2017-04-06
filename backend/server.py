@@ -131,7 +131,7 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             roomid = self.factory.addRoom(self)
             self.sendMessage2('Your assigned room id: ' + str(roomid))
         elif cmd == Commands.LOGINCONTROLLER:
-            roomid = target ## requires parsing
+            roomid = payload ## requires parsing
             success = self.factory.registerController(self, roomid)
             if not success:
                 self.sendMessage2("Unable to comply")
