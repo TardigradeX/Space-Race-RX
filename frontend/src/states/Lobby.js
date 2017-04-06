@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import * from "../commands";
 
 export default class extends Phaser.State {
 
@@ -14,7 +15,7 @@ export default class extends Phaser.State {
 
       this.websocket.onopen = function () {
           console.log("OPENED SOCKET");
-          this.send('Hi there')
+          this.send(LOGINMASTER + DELIMETER + SERVER + DELIMETER + NONE)
       };
 
       this.websocket.onerror = function (error) {
@@ -24,8 +25,7 @@ export default class extends Phaser.State {
       this.websocket.onmessage = function (message) {
           console.log("Message Incoming ... ")
           console.log(message.data);
-          // this.parse(message.data); // make it via bind
-      }
+      };
 
       this.websocket.onclose = function(close){
         this.send("logout|room|byebye")
@@ -33,22 +33,9 @@ export default class extends Phaser.State {
     }
 
     create () {
-      var x,y, centerX;
-        console.log(this.game);
-
-        this.buttonConnect = this.game.add.button(this.game.world.centerX - 50, 100, 'button', this.switchConnection, this, 2, 1, 0);
-        this.buttonMsg = this.game.add.button(this.game.world.centerX - 50, 200, 'button', this.aMessage, this, 2, 1, 0);
 
     }
 
-    aMessage(){
-      var rnum = Math.random();
-      var i = (rnum > 0.5) + 1
-      console.log("Sending message to player" + i);
-      var cmd = "message|player"+i+"|Hey bitch"
-      this.websocket.send(cmd)
-
-    }
 
     parse(message){
       console.log(typeof message);
@@ -62,25 +49,6 @@ export default class extends Phaser.State {
         payload = mySplit[2]
         if (cmd == 'signup'){
           console.log('Player1 signed up. ' + message);
-        }
-      }
-    }
-
-    switchConnection(){
-      if(!this.isConnected){
-        console.log('Sending login');
-        if(this.websocket.readyState == 1){
-          this.websocket.send("loginmaster|target|hi there")
-          this.isConnected = true
-        } else {
-          console.log('Fail - Websocket state: ' + this.websocket.readyState);
-        }
-      } else {
-        console.log('Closing WebSocket ');
-        if(this.websocket.readyState != 3){
-          this.websocket.close()
-        } else {
-          console.log("Websocket already closed");
         }
       }
     }
