@@ -5,8 +5,10 @@ from Commands import Commands, Targets
 class RoomService(object):
     def __init__(self):
         self.__freeclients = [] #  list of peers (str())
+
         self.__service = {} # <roomid>:<Room>
         self.__userlocation = {} # <tcp>:roomid
+
         self.__lastroomid = 0
 
     def __delUser(self, peer):
@@ -26,21 +28,24 @@ class RoomService(object):
         self.__service.pop(roomid)
 
     def passMessage(self, sourcepeer, target, payload):
+        """ identify player """
         print("Message from", sourcepeer, "to", target)
         # target defines if source is master
         if not sourcepeer in self.__userlocation:
             print("User not registered")
             return(False)
+
         roomid = self.__userlocation[sourcepeer]
         room = self.__service[roomid]
         if target.startswith(Targets.MASTER):
             # send message from player to master
             print("Message from player",sourcepeer, "to master")
             room.getMaster().client().sendMessage2(payload)
-        elif target.startswith(Targets.PLAYER):
+
+        elif target.startswith(Targets.CONTROLLER):
             # send message from master to target player
             print('Message from master to', target)
-            i = int(target.replace(Targets.PLAYER, '')) - 1
+            i = int(target.replace(Targets.CONTROLLER, '')) - 1
             client = room.getUser(i)
             if client == None:
                 room.getMaster().client().sendMessage2(target+" not found")
