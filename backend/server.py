@@ -1,5 +1,11 @@
 import sys
 import random
+import re
+import enum
+
+from Room import Room
+from User import User
+from Commands import Commands, Targets
 
 from twisted.web.static import File
 from twisted.python import log
@@ -11,83 +17,144 @@ from autobahn.twisted.websocket import WebSocketServerFactory, \
 
 from autobahn.twisted.resource import WebSocketResource
 
-
-class SpaceRaceRXProtocol(WebSocketServerProtocol):
-
-    def onConnect(self, response):
-        print("Connected to Server: {}".format(response.peer))
-
-    def onOpen(self):
-        """
-        Connection from client is opened. Fires after opening
-        websockets handshake has been completed and we can send
-        and receive messages.
-
-        Register client in factory, so that it is able to track it.
-        Try to find conversation partner for this client.
-        """
-        self.factory.register(self)
-        self.factory.findPartner(self)
-
-    def connectionLost(self, reason):
-        """
-        Client lost connection, either disconnected or some error.
-        Remove client from list of tracked connections.
-        """
-        self.factory.unregister(self)
-
-    def onMessage(self, payload, isBinary):
-        """
-        Message sent from client, communicate this message to its conversation partner,
-        """
-        self.factory.communicate(self, payload, isBinary)
-
-    def onClose(self):
-        print("Connection closed")
-
-
 class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def __init__(self, *args, **kwargs):
         super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
-        self.clients = {}
 
-    def register(self, client):
-        """
-        Add client to list of managed connections.
-        """
-        self.clients[client.peer] = {"object": client, "partner": None}
+        self.roomService = {}
+        self.hangmans = []  # aka dangling clients, without room nor master/controller assignment
+        self.roomid = 0
+
+    def addHangman(self, peer):
+        self.hangmans.append(peer)
+
+    def addRoom(self, client):
+        peer = client.peer
+
+        if peer not in self.roomService:
+            self.hangmans.remove(client.peer)
+            user1 = User(client, self.roomid, isMaster = True)
+            room1 = Room(user1)
+            self.roomService[room1.roomid()] = room1
+            self.roomid += 1
+        print(self.roomService)
+        return(room1.roomid())
+
+    def delRoom(self, roomid):
+        """ Remove all clients before deleting """
+        ## master is still in list, fix it
+        usersLeft = self.roomService[roomid].getAllUser()[::-1] # controllers first, master last
+
+        try:
+            del self.roomService[roomid]
+        except Exception as e:
+            raise "Room does not exist..."
+        print(self.roomService)
+
+        return(usersLeft)
+
+    def registerController(self, client, roomid):
+        if not roomid in self.roomService:
+            return False
+
+        print('Adding controller to room')
+        user1 = User(client, roomid, isMaster = False)
+        ## recommending class roomService for automated room.exists() handling
+        success = self.roomService[roomid].addController(user1)
+
+        if success:
+            user1.client().sendMessage2('Successfully registered to room ' + roomid)
+            self.roomService[roomid].getMaster().client().sendMessage2("Controller registered to room "+roomid)
+        return success
+
+    def unregisterController(self, peer, roomid):
+        self.roomService[roomid].delController(peer)
+        self.roomService[roomid].getMaster().client().sendMessage2( \
+        'Controller ' + peer + ' left')
 
     def unregister(self, client):
-        """
-        Remove client from list of managed connections.
-        """
-        self.clients.pop(client.peer)
+        for roomid in self.roomService.keys():
+            room = self.roomService[roomid]
+            masterpeer = room.getMaster().peer
+            controllerpeers = [x.peer for x in room.getControllers()]
+            if client.peer in masterpeer:
+                self.delRoom(roomid)
+                break
+            if client.peer in controllerpeers:
+                self.unregisterController(client.peer, roomid)
+                break
+            else:
+                print("Room does not exist")
 
-    def findPartner(self, client):
-        """
-        Find chat partner for a client. Check if there any of tracked clients
-        is idle. If there is no idle client just exit quietly. If there is
-        available partner assign him/her to our client.
-        """
-        available_partners = [c for c in self.clients if c != client.peer and not self.clients[c]["partner"]]
-        if not available_partners:
-            print("no partners for {} check in a moment".format(client.peer))
+    def passMessage(self, sourcepeer, target, payload):
+        pController = Targets.PLAYER
+        pMaster = Targets.MASTER
+
+        if target.startswith(pMaster):
+            """
+            1) identify master of controller
+            2) send message to master
+            """
+            for k in self.roomService:
+                room = self.roomService[k]
+                userList = room.getControllers()
+                if sourcepeer in [x.peer for x in userList]:
+                    room.getMaster().client().sendMessage2(payload)
+
+        elif target.startswith(pController):
+            """requires handling of none existing players"""
+            key1 = list(self.roomService.keys())
+            masterpeer = [self.roomService[k].master.peer for k in key1]
+            print(sourcepeer, masterpeer)
+            i = masterpeer.index(sourcepeer)
+            j = int(target.replace(Targets.PLAYER, ''))
+            print(self.roomService[key1[i]].getAllUser())
+
+            self.roomService[key1[i]].getUser(j-1).client().sendMessage2(payload)
+
+
+class SpaceRaceRXProtocol(WebSocketServerProtocol):
+
+    def sendMessage2(self, payload):
+        self.sendMessage(payload.encode('utf8'), False)
+
+    def parseMessage(self, payload):
+        pattern = re.compile('.+\|.+\|.+')
+        isCmd = bool(pattern.search(payload))
+        if not isCmd:
+            return(None)
+
+        cmd, target, payload = payload.split('|')
+
+        if cmd == Commands.LOGINMASTER:
+            roomid = self.factory.addRoom(self)
+            self.sendMessage2('Your assigned room id: ' + str(roomid))
+        elif cmd == Commands.LOGINCONTROLLER:
+            roomid = target ## requires parsing
+            success = self.factory.registerController(self, roomid)
+            if not success:
+                self.sendMessage2("Unable to comply")
+                self.sendClose()
+        elif cmd == Commands.MESSAGE:
+            self.factory.passMessage(self.peer, target, payload)
         else:
-            partner_key = random.choice(available_partners)
-            self.clients[partner_key]["partner"] = client
-            self.clients[client.peer]["partner"] = self.clients[partner_key]["object"]
+            print("Unknown command")
 
-    def communicate(self, client, payload, isBinary):
-        """
-        Broker message from client to its partner.
-        """
-        c = self.clients[client.peer]
-        if not c["partner"]:
-            c["object"].sendMessage("Sorry you dont have partner yet, check back in a minute".encode('utf8'), isBinary=False)
-        else:
-            c["partner"].sendMessage(payload, isBinary)
+    def onConnect(self, request):
+        # request can be parsed to JSON object!
+        print("Connected to Server: {}".format(request.peer))
+        # how to identify whether request is master or client?
+        self.factory.addHangman(request.peer)
 
+    def onMessage(self, payload, isBinary):
+        pay1 = payload.decode('utf8')
+        print(self.peer + ": " + pay1) # which peer?
+        self.parseMessage(pay1)
+        print("Message parsed")
+
+    def onClose(self, wasClean, code, reason):
+        self.factory.unregister(self)
 
 if __name__ == "__main__":
     port = 9000 # tcp port
@@ -106,5 +173,5 @@ if __name__ == "__main__":
     site = Site(root)
     reactor.listenTCP(port, site)
     # reactor.listenTCP(8080, factory)
-    
+
     reactor.run()
