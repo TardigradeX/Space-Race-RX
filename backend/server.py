@@ -107,12 +107,13 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
             key1 = list(self.roomService.keys())
             masterpeer = [self.roomService[k].master.peer for k in key1]
             print(sourcepeer, masterpeer)
-            i = masterpeer.index(sourcepeer)
+            i = masterpeer.index    (sourcepeer)
             j = int(target.replace(Targets.PLAYER, ''))
-            print(self.roomService[key1[i]].getAllUser())
-
-            self.roomService[key1[i]].getUser(j-1).client().sendMessage2(payload)
-
+            # print(self.roomService[key1[i]].getAllUser())
+            if self.roomService[key1[i]].getUser(j-1):
+                self.roomService[key1[i]].getUser(j-1).client().sendMessage2(payload)
+            else:
+                self.sendMessage2("Client not found")
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
@@ -136,8 +137,14 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             if not success:
                 self.sendMessage2("Unable to comply")
                 self.sendClose()
+            else:
+                print("Controller " + self.peer + " registered to room" + roomid)
+
         elif cmd == Commands.MESSAGE:
             self.factory.passMessage(self.peer, target, payload)
+        elif cmd == Commands.LOGOUT:
+            print(self.peer + "sent a logout")
+            pass
         else:
             print("Unknown command")
 
