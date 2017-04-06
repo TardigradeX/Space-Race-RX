@@ -66,8 +66,14 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             if not success:
                 self.sendMessage2("Unable to comply")
                 self.sendClose()
+            else:
+                print("Controller " + self.peer + " registered to room" + roomid)
+
         elif cmd == Commands.MESSAGE:
             self.factory.passMessage(self.peer, target, payload)
+        elif cmd == Commands.LOGOUT:
+            print(self.peer + "sent a logout")
+            pass
         else:
             print("Unknown command")
 
