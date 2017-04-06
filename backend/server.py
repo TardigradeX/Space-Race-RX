@@ -113,7 +113,8 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
             if self.roomService[key1[i]].getUser(j-1):
                 self.roomService[key1[i]].getUser(j-1).client().sendMessage2(payload)
             else:
-                self.sendMessage2("Client not found")
+                print("Client", target, "not found")
+                self.roomService[key1[i]].master.client().sendMessage2("Client not found")
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
