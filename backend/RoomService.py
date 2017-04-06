@@ -35,17 +35,19 @@ class RoomService(object):
             print("User not registered")
             return(False)
 
-        roomid = self.__userlocation[sourcepeer]
-        room = self.__service[roomid]
-        if target.startswith(Targets.MASTER):
+        targetType, roomId = target.split(':')
+        room = self.__service[roomId]
+        if targetType.startswith(Targets.MASTER):
             # send message from player to master
             print("Message from player",sourcepeer, "to master")
-            room.getMaster().client().sendMessage2(payload)
+            playerId = room.getPlayerId(sourcepeer)
+            message = Commands.MESSAGE + '|' + Targets.MASTER + ':' + Targets.PLAYER+playerId+'|'+payload
+            room.getMaster().client().sendMessage2(message)
 
-        elif target.startswith(Targets.CONTROLLER):
+        elif targetType.startswith(Targets.CONTROLLER):
             # send message from master to target player
             print('Message from master to', target)
-            i = int(target.replace(Targets.CONTROLLER, '')) - 1
+            i = int(targetType.replace(Targets.CONTROLLER, '')) - 1
             client = room.getUser(i)
             if client == None:
                 room.getMaster().client().sendMessage2(target+" not found")

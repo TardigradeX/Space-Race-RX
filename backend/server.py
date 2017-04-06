@@ -57,8 +57,8 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         """
             Recognized commands are of form cmd|target|payload
             if payload = '$', it is an empty string
-            Login - master: login|server|master
-              - controller: login|server|roomid
+            Login - master: login|master|none
+              - controller: login|controller:roomid|none
 
             Logout          logout|server|$
                 [not yet implemented]
@@ -74,8 +74,6 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             if playload == Commands.MASTER:
                 roomid = self.factory.addRoom(self)
                 self.sendMessage2('Your assigned room id: ' + str(roomid))
-
-            # elif playload == Commands.CONTROLLER:
             else:
                 roomid = payload ## requires parsing
                 success = self.factory.registerController(self, roomid)
@@ -86,6 +84,11 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
                     print("Controller " + self.peer + " registered to room" + roomid)
 
         elif cmd == Commands.MESSAGE:
+            """
+          messages should be described as follows
+           message -to master:      message|master:roomid|payload
+                  - to controller:  message|controller:roomid|payload
+       """
             self.factory.passMessage(self.peer, target, payload)
 
         elif cmd == Commands.LOGOUT:

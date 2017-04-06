@@ -46,6 +46,11 @@ class Room(object):
     def getControllers(self):
         return([x for x in self.__controller if x != None])
 
+    def getPlayerId(self, peer):
+        """ remove controller from list """
+        contpeer = [x.peer for x in self.__controller if x != None]
+        return contpeer.index(peer)+1
+
     def getAllUser(self):
         return([self.__master] + [x for x in self.__controller if x != None])
 
