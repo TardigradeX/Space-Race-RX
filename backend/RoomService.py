@@ -28,6 +28,9 @@ class RoomService(object):
     def passMessage(self, sourcepeer, target, payload):
         print("Message from", sourcepeer, "to", target)
         # target defines if source is master
+        if not sourcepeer in self.__userlocation:
+            print("User not registered")
+            return(False)
         roomid = self.__userlocation[sourcepeer]
         room = self.__service[roomid]
         if target.startswith(Targets.MASTER):
@@ -67,25 +70,32 @@ class RoomService(object):
     def addUser(self, client, roomid):
         if not client.peer in self.__freeclients:
             return(False)
+        if not roomid in self.__service:
+            print("Room not available")
+            return(False)
 
         user = User(client, roomid, isMaster = False)
         print("Adding controller to room", user.roomid())
+        success = self.__service[user.roomid()].addController(user)
+        if success:
+            self.__userlocation[user.peer] = user.roomid()
+            self.__freeclients.remove(client.peer)
 
-
-        self.__service[user.roomid()].addController(user)
-        self.__userlocation[user.peer] = user.roomid()
-
-        self.__freeclients.remove(client.peer)
-        return(True)
+        return(success)
 
     def delClient(self, peer):
         roomid = None
-        print(peer, self.__userlocation, peer in self.__userlocation)
-
+        print("Current peer",peer,
+        "- User list:", self.__userlocation,
+        "- User found:", peer in self.__userlocation)
+        if not peer in self.__userlocation:
+            print("Client not in list")
+            return(False, None)
         try:
             roomid = self.__userlocation[peer]
         except Exception as e:
             raise "Client does not exist"
+
         room = self.__service[roomid]
         if peer == room.getMaster().peer:
             self.__delRoom(roomid)
