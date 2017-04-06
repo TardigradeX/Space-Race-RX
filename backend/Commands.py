@@ -22,3 +22,6 @@ class Targets(str, Enum):
     PLAYER4 = "player4"
     MASTER = "master"
     SERVER = "server"
+
+class Default(str, Enum):
+    NONE = 'none'

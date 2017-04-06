@@ -5,7 +5,7 @@ import enum
 
 from Room import Room
 from User import User
-from Commands import Commands, Targets
+from Commands import Commands, Targets, Default
 
 from twisted.web.static import File
 from twisted.python import log
@@ -64,8 +64,8 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
         success = self.roomService[roomid].addController(user1)
 
         if success:
-            user1.client().sendMessage2('Successfully registered to room ' + roomid)
-            self.roomService[roomid].getMaster().client().sendMessage2("Controller registered to room "+roomid)
+            user1.client().sendMessage2(Commands.SIGNUP + "|" + Targets.PLAYER + '|' + roomid)
+            self.roomService[roomid].getMaster().client().sendMessage2(Commands.SIGNUP + '|' + Targets.MASTER + "|" + Default.NONE)
         return success
 
     def unregisterController(self, peer, roomid):
