@@ -54,28 +54,43 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         isCmd = bool(pattern.search(payload))
         if not isCmd:
             return(None)
+        """
+            Recognized commands are of form cmd|target|payload
+            if payload = '$', it is an empty string
+            Login - master: login|master|$
+              - controller: login|controller|roomid
+
+            Logout          logout|server|$
+                [not yet implemented]
+
+             Message:       message|target|Message
+                target := (master, controller1, ..., controller4)
+        """
 
         cmd, target, payload = payload.split('|')
 
-        if cmd == Commands.LOGINMASTER:
-            roomid = self.factory.addRoom(self)
-            self.sendMessage2('Your assigned room id: ' + str(roomid))
-        elif cmd == Commands.LOGINCONTROLLER:
-            roomid = target ## requires parsing
-            success = self.factory.registerController(self, roomid)
-            if not success:
-                self.sendMessage2("Unable to comply")
-                self.sendClose()
-            else:
-                print("Controller " + self.peer + " registered to room" + roomid)
+        if cmd == Commands.LOGIN:
+            if target == Commands.MASTER:
+                roomid = self.factory.addRoom(self)
+                self.sendMessage2('Your assigned room id: ' + str(roomid))
+
+            elif target == Commands.CONTROLLER:
+                roomid = payload ## requires parsing
+                success = self.factory.registerController(self, roomid)
+                if not success:
+                    self.sendMessage2("Could not sign up to room"+ str(roomid))
+                    self.sendClose()
+                else:
+                    print("Controller " + self.peer + " registered to room" + roomid)
 
         elif cmd == Commands.MESSAGE:
             self.factory.passMessage(self.peer, target, payload)
+
         elif cmd == Commands.LOGOUT:
-            print(self.peer + "sent a logout")
+            print("[not implemented] " + self.peer + "sent a logout ")
             pass
         else:
-            print("Unknown command")
+            print("Unknown command - unable to comply")
 
     def onConnect(self, request):
         # request can be parsed to JSON object!
