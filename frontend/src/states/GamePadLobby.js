@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import config from '../config'
-import {commands, targets, DELIMETER} from '../commands'
+import {commands, targets, DELIMETER, NONE, TARGET_DELIMETER} from '../commands'
 
 export default class extends Phaser.State {
     init() {
@@ -64,9 +64,9 @@ export default class extends Phaser.State {
 
     registerPad() {
         this.websocket.send(
-            commands.LOGINCONTROLLER + DELIMETER +
-            targets.SERVER + DELIMETER +
-            this.roomId
+            commands.LOGIN + DELIMETER +
+            targets.SERVER + TARGET_DELIMETER + this.roomId + DELIMETER +
+            NONE
         );
     }
 

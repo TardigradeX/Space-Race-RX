@@ -76,10 +76,10 @@ class RoomService(object):
 
     def addUser(self, client, roomid):
         if not client.peer in self.__freeclients:
-            return(False)
+            return(False,"")
         if not roomid in self.__service:
             print("Room not available")
-            return(False)
+            return(False,"")
 
         user = User(client, roomid, isMaster = False)
         print("Adding controller to room", user.roomid())
@@ -87,8 +87,9 @@ class RoomService(object):
         if success:
             self.__userlocation[user.peer] = user.roomid()
             self.__freeclients.remove(client.peer)
+            return(success, self.__service[user.roomid()].getPlayerId)
 
-        return(success)
+        return(False,"")
 
     def delClient(self, peer):
         roomid = None

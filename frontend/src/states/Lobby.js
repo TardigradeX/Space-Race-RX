@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import config from '../config'
-import {DELIMETER, targets, commands, NONE} from "../commands";
+import {DELIMETER, targets, commands, NONE, NEW, TARGET_DELIMETER} from "../commands";
 
 export default class extends Phaser.State {
 
@@ -16,7 +16,10 @@ export default class extends Phaser.State {
 
       this.websocket.onopen = function () {
           console.log("OPENED SOCKET");
-          this.send(commands.LOGINMASTER + DELIMETER + targets.SERVER + DELIMETER + NONE)
+          this.send(
+              commands.LOGIN + DELIMETER +
+              targets.SERVER + TARGET_DELIMETER + NEW + DELIMETER +
+              NONE)
       };
 
       this.websocket.onerror = function (error) {
@@ -67,7 +70,7 @@ export default class extends Phaser.State {
             for(let i = 0; i < this.playerCount; i++) {
                 players += "Player "+i+"\t";
             }
-            this.game.add.text(100, 64, players.slice(0,-1), style);
+            let text= this.game.add.text(this.game.width / 2, (this.game.height / 5 ) * 2, players);
         }
 
     }

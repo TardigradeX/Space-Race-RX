@@ -25,3 +25,5 @@ class Targets(str, Enum):
 
 class Default(str, Enum):
     NONE = 'none'
+    DELIMETER = '|'
+    TARGET_DELIMETER = ':'
