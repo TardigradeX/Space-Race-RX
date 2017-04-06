@@ -3,8 +3,9 @@ import random
 import re
 import enum
 
-from Room import Room
 from User import User
+from Room import Room
+from RoomService import RoomService
 from Commands import Commands, Targets
 
 from twisted.web.static import File
@@ -22,96 +23,25 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
     def __init__(self, *args, **kwargs):
         super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
 
-        self.roomService = {}
-        self.hangmans = []  # aka dangling clients, without room nor master/controller assignment
-        self.roomid = 0
+        self.roomService = RoomService()
 
-    def addHangman(self, peer):
-        self.hangmans.append(peer)
+    def addNewClient(self, peer):
+        self.roomService.addNewClient(peer)
 
     def addRoom(self, client):
-        peer = client.peer
-
-        if peer not in self.roomService:
-            self.hangmans.remove(client.peer)
-            user1 = User(client, self.roomid, isMaster = True)
-            room1 = Room(user1)
-            self.roomService[room1.roomid()] = room1
-            self.roomid += 1
-        print(self.roomService)
-        return(room1.roomid())
-
-    def delRoom(self, roomid):
-        """ Remove all clients before deleting """
-        ## master is still in list, fix it
-        usersLeft = self.roomService[roomid].getAllUser()[::-1] # controllers first, master last
-
-        try:
-            del self.roomService[roomid]
-        except Exception as e:
-            raise "Room does not exist..."
-        print(self.roomService)
-
-        return(usersLeft)
+        roomid = self.roomService.addRoom(client)
+        return(roomid)
 
     def registerController(self, client, roomid):
-        if not roomid in self.roomService:
-            return False
+        success = self.roomService.addUser(client, roomid)
+        return(success)
 
-        print('Adding controller to room')
-        user1 = User(client, roomid, isMaster = False)
-        ## recommending class roomService for automated room.exists() handling
-        success = self.roomService[roomid].addController(user1)
-
-        if success:
-            user1.client().sendMessage2('Successfully registered to room ' + roomid)
-            self.roomService[roomid].getMaster().client().sendMessage2("Controller registered to room "+roomid)
-        return success
-
-    def unregisterController(self, peer, roomid):
-        self.roomService[roomid].delController(peer)
-        self.roomService[roomid].getMaster().client().sendMessage2( \
-        'Controller ' + peer + ' left')
-
-    def unregister(self, client):
-        for roomid in self.roomService.keys():
-            room = self.roomService[roomid]
-            masterpeer = room.getMaster().peer
-            controllerpeers = [x.peer for x in room.getControllers()]
-            if client.peer in masterpeer:
-                self.delRoom(roomid)
-                break
-            if client.peer in controllerpeers:
-                self.unregisterController(client.peer, roomid)
-                break
-            else:
-                print("Room does not exist")
+    def unregister(self, peer):
+        success, isRoom = self.roomService.delClient(peer)
+        print("worked",success,", isMaster:", isRoom)
 
     def passMessage(self, sourcepeer, target, payload):
-        pController = Targets.PLAYER
-        pMaster = Targets.MASTER
-
-        if target.startswith(pMaster):
-            """
-            1) identify master of controller
-            2) send message to master
-            """
-            for k in self.roomService:
-                room = self.roomService[k]
-                userList = room.getControllers()
-                if sourcepeer in [x.peer for x in userList]:
-                    room.getMaster().client().sendMessage2(payload)
-
-        elif target.startswith(pController):
-            """requires handling of none existing players"""
-            key1 = list(self.roomService.keys())
-            masterpeer = [self.roomService[k].master.peer for k in key1]
-            print(sourcepeer, masterpeer)
-            i = masterpeer.index(sourcepeer)
-            j = int(target.replace(Targets.PLAYER, ''))
-            print(self.roomService[key1[i]].getAllUser())
-
-            self.roomService[key1[i]].getUser(j-1).client().sendMessage2(payload)
+        self.roomService.passMessage(sourcepeer, target, payload)
 
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
@@ -124,37 +54,62 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         isCmd = bool(pattern.search(payload))
         if not isCmd:
             return(None)
+        """
+            Recognized commands are of form cmd|target|payload
+            if payload = '$', it is an empty string
+            Login - master: login|server|master
+              - controller: login|server|roomid
+
+            Logout          logout|server|$
+                [not yet implemented]
+
+             Message:       message|target|Message
+                target := (master, controller1, ..., controller4)
+        """
+
 
         cmd, target, payload = payload.split('|')
 
-        if cmd == Commands.LOGINMASTER:
-            roomid = self.factory.addRoom(self)
-            self.sendMessage2('Your assigned room id: ' + str(roomid))
-        elif cmd == Commands.LOGINCONTROLLER:
-            roomid = target ## requires parsing
-            success = self.factory.registerController(self, roomid)
-            if not success:
-                self.sendMessage2("Unable to comply")
-                self.sendClose()
+        if cmd == Commands.LOGIN:
+            if playload == Commands.MASTER:
+                roomid = self.factory.addRoom(self)
+                self.sendMessage2('Your assigned room id: ' + str(roomid))
+
+            # elif playload == Commands.CONTROLLER:
+            else:
+                roomid = payload ## requires parsing
+                success = self.factory.registerController(self, roomid)
+                if not success:
+                    self.sendMessage2("Could not sign up to room"+ str(roomid))
+                    self.sendClose()
+                else:
+                    print("Controller " + self.peer + " registered to room" + roomid)
+
         elif cmd == Commands.MESSAGE:
             self.factory.passMessage(self.peer, target, payload)
+
+        elif cmd == Commands.LOGOUT:
+            print("[not implemented] " + self.peer + "sent a logout ")
+            pass
         else:
-            print("Unknown command")
+            print("Unknown command - unable to comply")
 
     def onConnect(self, request):
         # request can be parsed to JSON object!
         print("Connected to Server: {}".format(request.peer))
         # how to identify whether request is master or client?
-        self.factory.addHangman(request.peer)
+        self.factory.addNewClient(request.peer)
 
     def onMessage(self, payload, isBinary):
         pay1 = payload.decode('utf8')
         print(self.peer + ": " + pay1) # which peer?
         self.parseMessage(pay1)
         print("Message parsed")
+        print("Room overview")
+        print(self.factory.roomService.listRooms())
 
     def onClose(self, wasClean, code, reason):
-        self.factory.unregister(self)
+        self.factory.unregister(self.peer)
 
 if __name__ == "__main__":
     port = 9000 # tcp port
