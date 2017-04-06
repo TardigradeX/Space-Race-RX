@@ -59,8 +59,6 @@ export default class extends Phaser.State {
     update (){
         if(this.roomId.length > 0) {
             let text= this.game.add.text(this.game.width / 2, (this.game.height / 5 ) * 4, this.roomId);
-            text.anchor.x = 0.5;
-            text.anchor.y = 0.2;
         }
 
         if(this.playerCount > 0) {
