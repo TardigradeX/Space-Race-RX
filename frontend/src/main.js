@@ -9,14 +9,16 @@ import GameOverState from './states/GameOver'
 import DummyDecide from './states/DummyDecide'
 import Lobby from './states/Lobby'
 import Control from './states/Controll'
+import GamePadLobby from "./states/GamePadLobby";
 
 import config from './config'
 
+
 class Game extends Phaser.Game {
   constructor () {
-    const docElement = document.documentElement
-    const width = docElement.clientWidth > config.gameWidth ? config.gameWidth : docElement.clientWidth
-    const height = docElement.clientHeight > config.gameHeight ? config.gameHeight : docElement.clientHeight
+    const docElement = document.documentElement;
+    const width = docElement.clientWidth > config.gameWidth ? config.gameWidth : docElement.clientWidth;
+    const height = docElement.clientHeight > config.gameHeight ? config.gameHeight : docElement.clientHeight;
 
     super(width, height, Phaser.CANVAS, 'content', null)
 
@@ -27,6 +29,7 @@ class Game extends Phaser.Game {
     this.state.add('DummyDecide', DummyDecide, false);
     this.state.add('Lobby', Lobby, false);
     this.state.add('Control', Control, false);
+    this.state.add('GamePadLobby', GamePadLobby, false);
     this.state.start('Boot')
 
   }

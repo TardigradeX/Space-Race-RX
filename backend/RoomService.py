@@ -35,17 +35,19 @@ class RoomService(object):
             print("User not registered")
             return(False)
 
-        roomid = self.__userlocation[sourcepeer]
-        room = self.__service[roomid]
-        if target.startswith(Targets.MASTER):
+        targetType, roomId = target.split(':')
+        room = self.__service[roomId]
+        if targetType.startswith(Targets.MASTER):
             # send message from player to master
             print("Message from player",sourcepeer, "to master")
-            room.getMaster().client().sendMessage2(payload)
+            playerId = room.getPlayerId(sourcepeer)
+            message = Commands.MESSAGE + '|' + Targets.MASTER + ':' + Targets.PLAYER+playerId+'|'+payload
+            room.getMaster().client().sendMessage2(message)
 
-        elif target.startswith(Targets.CONTROLLER):
+        elif targetType.startswith(Targets.CONTROLLER):
             # send message from master to target player
             print('Message from master to', target)
-            i = int(target.replace(Targets.CONTROLLER, '')) - 1
+            i = int(targetType.replace(Targets.CONTROLLER, '')) - 1
             client = room.getUser(i)
             if client == None:
                 room.getMaster().client().sendMessage2(target+" not found")
@@ -74,10 +76,10 @@ class RoomService(object):
 
     def addUser(self, client, roomid):
         if not client.peer in self.__freeclients:
-            return(False)
+            return(False,"")
         if not roomid in self.__service:
             print("Room not available")
-            return(False)
+            return(False,"")
 
         user = User(client, roomid, isMaster = False)
         print("Adding controller to room", user.roomid())
@@ -85,8 +87,9 @@ class RoomService(object):
         if success:
             self.__userlocation[user.peer] = user.roomid()
             self.__freeclients.remove(client.peer)
+            return(success, self.__service[user.roomid()].getPlayerId)
 
-        return(success)
+        return(False,"")
 
     def delClient(self, peer):
         roomid = None

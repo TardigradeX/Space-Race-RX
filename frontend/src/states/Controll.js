@@ -25,27 +25,9 @@ export default class extends Phaser.State {
 
         this.leftDown = false;
         this.rightDown = false;
-        this.thrustDown = false;
     }
 
     create() {
-        this.thrustButton = this.game.add.button(150, this.game.world.centerY / 2, 'button', null, this, 0, 1, 0, 1);
-        this.thrustButton.events.onInputOver.add(function () {
-            this.thrustDown = true;
-            this.controll()
-        }, this);
-       /* this.thrustButton.events.onInputOut.add(function () {
-            this.thrustDown = false;
-            this.controll()
-        }, this);*/
-        this.thrustButton.events.onInputDown.add(function () {
-            this.thrustDown = true;
-            this.controll()
-        }, this);
-        this.thrustButton.events.onInputUp.add(function () {
-            this.thrustDown = false;
-            this.controll()
-        }, this);
 
         this.buttonBoostRight = this.game.add.button(300, this.game.world.centerY / 2, 'button', null, this, 0, 1, 0, 1);
         this.buttonBoostRight.events.onInputOver.add(function () {

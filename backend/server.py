@@ -3,11 +3,10 @@ import random
 import re
 import enum
 
-from User import User
 from Room import Room
+from User import User
+from Commands import Commands, Targets , Default
 from RoomService import RoomService
-from Commands import Commands, Targets
-
 from twisted.web.static import File
 from twisted.python import log
 from twisted.web.server import Site
@@ -33,8 +32,8 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
         return(roomid)
 
     def registerController(self, client, roomid):
-        success = self.roomService.addUser(client, roomid)
-        return(success)
+        (success, playerId) = self.roomService.addUser(client, roomid)
+        return success, playerId
 
     def unregister(self, peer):
         success, isRoom = self.roomService.delClient(peer)
@@ -57,8 +56,8 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         """
             Recognized commands are of form cmd|target|payload
             if payload = '$', it is an empty string
-            Login - master: login|server|master
-              - controller: login|server|roomid
+            Login - master: login|server:new|none
+              - controller: login|server:roomid|none
 
             Logout          logout|server|$
                 [not yet implemented]
@@ -71,21 +70,30 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         cmd, target, payload = payload.split('|')
 
         if cmd == Commands.LOGIN:
-            if playload == Commands.MASTER:
-                roomid = self.factory.addRoom(self)
-                self.sendMessage2('Your assigned room id: ' + str(roomid))
-
-            # elif playload == Commands.CONTROLLER:
-            else:
-                roomid = payload ## requires parsing
-                success = self.factory.registerController(self, roomid)
+            targetType, roomId = target.split(':')
+            if roomId.isdigit() and len(roomId) == 4:
+                success = self.factory.registerController(self, roomId)
                 if not success:
-                    self.sendMessage2("Could not sign up to room"+ str(roomid))
+                    self.sendMessage2("Could not sign up to room"+ str(roomId))
                     self.sendClose()
                 else:
-                    print("Controller " + self.peer + " registered to room" + roomid)
+                    self.sendMessage2(
+                        Commands.MESSAGE + Default.DELIMETER +
+                        Targets.CONTROLLER + Default.TARGET_DELIMETER + roomId + Default.DELIMETER +
+                    "WELCOME TO SERVER")
+                    self.factory.passMessage(self.peer, target, "New Player")
+                    print("Controller " + self.peer + " registered to room" + roomId)
+            else:
+                newRoomId = self.factory.addRoom(self)
+                self.sendMessage2('Your assigned room id: ' + str(newRoomId))
+
 
         elif cmd == Commands.MESSAGE:
+            """
+          messages should be described as follows
+           message -to master:      message|master:roomid|payload
+                  - to controller:  message|controller:roomid|payload
+       """
             self.factory.passMessage(self.peer, target, payload)
 
         elif cmd == Commands.LOGOUT:

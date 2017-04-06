@@ -21,3 +21,9 @@ class Targets(str, Enum):
     CONTROLLER4 = "controller4"
     MASTER = "master"
     SERVER = "server"
+    PLAYER = "player"
+
+class Default(str, Enum):
+    NONE = 'none'
+    DELIMETER = '|'
+    TARGET_DELIMETER = ':'
