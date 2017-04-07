@@ -1,21 +1,14 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
-import SpaceShip from '../sprites/spaceship'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
 
 export default class extends Phaser.State {
-  init () {
+  init (websocket, roomId, players) {
+      this.websocket = websocket;
+      this.roomId = roomId;
+      this.players = players;
   }
   preload () {
-      self = this
-
-      this.websocket = new WebSocket("ws://localhost:9000/ws");
-
-      // When the connection is open, send some data to the server
-      this.websocket.onopen = function () {
-          console.log("OPENED MASTER SOCKET");
-      };
-
       // Log errors
       this.websocket.onerror = function (error) {
           console.log('WebSocket Error ' + error);
@@ -23,9 +16,23 @@ export default class extends Phaser.State {
 
       this.websocket.onmessage = function (message) {
           console.log(message.data);
-          self.spaceShip.movement = message.data;
-      }
+          this.parse(message.data)
+      }.bind(this);
   }
+
+    parse(message) {
+        let mySplit = message.split(DELIMETER);
+        if (mySplit.length == 3) {
+            let cmd = mySplit[0];
+            let target = mySplit[1];
+            let payload = mySplit[2];
+            console.log(mySplit);
+            if (cmd == 'message') {
+                this.playerId = target.split(TARGET_DELIMETER)[2]; //todo later go to correct player
+                this.spaceShip.movement = payload;
+            }
+        }
+    }
 
   create () {
     const bannerText = 'Xander s Test';
@@ -51,16 +58,16 @@ export default class extends Phaser.State {
     update () {
 
         if (this.spaceShip.movement == 'thrust') {
-            this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 350, this.spaceShip.body.acceleration);
+            this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 400, this.spaceShip.body.acceleration);
         } else {
             this.spaceShip.body.acceleration.set(0);
         }
 
         if (this.spaceShip.movement == 'left') {
-            this.spaceShip.body.angularVelocity = -300;
+            this.spaceShip.body.angularVelocity = -200;
         }
         else if (this.spaceShip.movement == 'right') {
-            this.spaceShip.body.angularVelocity = 300;
+            this.spaceShip.body.angularVelocity = 200;
         } else {
             this.spaceShip.body.angularVelocity = 0;
         }

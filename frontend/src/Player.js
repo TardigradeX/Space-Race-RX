@@ -1,13 +1,15 @@
 /**
  * Created by daniel on 4/7/17.
  */
+import {playerStates} from "./commands";
 
-import commands from './commands.js'
 
 export class Player {
 
     constructor(id) {
+        console.log("New Players Build Width id" + id);
+        console.log("YEAHAAAA" + playerStates.ALIVE)
         this.id = id;
-        this.playerState = commands.playerState.ALIVE;
+        this.playerState = playerStates.ALIVE;
     }
 }

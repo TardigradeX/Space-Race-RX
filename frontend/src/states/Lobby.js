@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import config from '../config'
 import {DELIMETER, targets, commands, NONE, NEW, TARGET_DELIMETER} from "../commands";
+import {Player} from "../Player";
 
 export default class extends Phaser.State {
 
@@ -53,7 +54,8 @@ export default class extends Phaser.State {
                 if (payload == 'signup') {
                     this.roomId = target.split(TARGET_DELIMETER)[1];
                 } else {
-                    this.playerCount++;
+                    this.players.push(new Player(1));
+                    this.state.start('Game', false, false, this.websocket, this.roomId, this.players);
                 }
             }
         }

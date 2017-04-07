@@ -24,9 +24,10 @@ export default class extends Phaser.State {
         };
 
         this.websocket.onmessage = function (message) {
-            console.log("Message Incoming ... ")
+            console.log("Message Incoming, WILL START GAMEPAD ... ")
             console.log(message.data);
-            this.connectedMessage = message.data;
+            this.state.start('GamePad', false, false, this.websocket, this.roomId);
+            console.log('should have started');
         }.bind(this);
     }
 
