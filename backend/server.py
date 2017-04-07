@@ -66,11 +66,21 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
                 target := (master, controller1, ..., controller4)
         """
 
-
         cmd, target, payload = payload.split(Defaults.DELIMETER)
 
+        targetType = None
+        roomId = None
+        targetPlayerId = None
+
         if cmd == Commands.LOGIN:
-            targetType, roomId = target.split(Defaults.TARGET_DELIMETER)
+            tmp = target.split(Defaults.TARGET_DELIMETER)
+            if len(tmp) == 2:
+                targetType, roomId = tmp
+            elif len(tmp) == 3:
+                targetType, roomId, targetPlayerId = tmp
+            else:
+                raise Exception("Wrong target format")
+                
             if roomId.isdigit() and len(roomId) == 4:
                 success, playerId = self.factory.registerController(self, roomId)
                 if not success:

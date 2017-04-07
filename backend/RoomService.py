@@ -23,19 +23,31 @@ class RoomService(object):
 
         """ Take care of controllers """
 
-        print(self.__service[roomid].getMaster().peer)
-        self.__userlocation.pop(self.__service[roomid].getMaster().peer)
+        print(self.__service[roomid].master.peer)
+        self.__userlocation.pop(self.__service[roomid].master.peer)
         self.__service.pop(roomid)
 
     def passMessage(self, sourcepeer, target, payload):
         """ identify player """
+        targetType = None
+        roomId = None
+        targetPlayerId = None
+
         print("Message from", sourcepeer, "to", target)
         # target defines if source is master
         if not sourcepeer in self.__userlocation:
             print("User not registered")
             return(False)
 
-        targetType, roomId = target.split(Defaults.TARGET_DELIMETER)
+        tmp = target.split(Defaults.TARGET_DELIMETER)
+        if len(tmp) == 2:
+            targetType, roomId = tmp
+        elif len(tmp) == 3:
+            targetType, roomId, targetPlayerId = tmp
+        else:
+            raise Exception("Wrong target format")
+
+
         room = self.__service[roomId]
         if targetType.startswith(Targets.MASTER):
             # send message from player to master
@@ -45,7 +57,7 @@ class RoomService(object):
             message = Commands.MESSAGE + Defaults.DELIMETER + \
                       Targets.MASTER + Defaults.TARGET_DELIMETER +\
                       roomId + Defaults.TARGET_DELIMETER + Targets.PLAYER+str(playerId)+Defaults.DELIMETER+payload
-            room.getMaster().client().sendMessage2(message)
+            room.master.client.sendMessage2(message)
 
         elif targetType.startswith(Targets.CONTROLLER):
             # send message from master to target player
@@ -53,9 +65,9 @@ class RoomService(object):
             i = int(targetType.replace(Targets.CONTROLLER, '')) - 1
             client = room.getUser(i)
             if client == None:
-                room.getMaster().client().sendMessage2(target+" not found")
+                room.master.client.sendMessage2(target+" not found")
             else:
-                client.client().sendMessage2(payload)
+                client.client.sendMessage2(payload)
 
     def addNewClient(self, peer):
         """
@@ -70,12 +82,12 @@ class RoomService(object):
         ## any client can become a master here, handling within server.py
         user = User(client, self.__lastroomid, isMaster = True )
         room = Room(user, nPlayers)
-        self.__service[room.roomid()] = room
-        self.__userlocation[client.peer] = room.roomid()
+        self.__service[room.roomid] = room
+        self.__userlocation[client.peer] = room.roomid
 
         self.__freeclients.remove(client.peer)
         self.__lastroomid += 1
-        return(room.roomid())
+        return(room.roomid)
 
     def addUser(self, client, roomid):
         if not client.peer in self.__freeclients:
@@ -85,12 +97,12 @@ class RoomService(object):
             return(False,"")
 
         user = User(client, roomid, isMaster = False)
-        print("Adding controller to room", user.roomid())
-        success = self.__service[user.roomid()].addController(user)
+        print("Adding controller to room", user.roomid)
+        success = self.__service[user.roomid].addController(user)
         if success:
-            self.__userlocation[user.peer] = user.roomid()
+            self.__userlocation[user.peer] = user.roomid
             self.__freeclients.remove(client.peer)
-            return(success, self.__service[user.roomid()].getPlayerId(client.peer))
+            return(success, self.__service[user.roomid].getPlayerId(client.peer))
 
         return(False,"")
 
@@ -108,21 +120,19 @@ class RoomService(object):
             raise "Client does not exist"
 
         room = self.__service[roomid]
-        if peer == room.getMaster().peer:
+        if peer == room.master.peer:
             self.__delRoom(roomid)
             return(True, True)
         else:
             self.__delUser(peer)
             return(True, False)
 
-    def getUser(self, roomid, idx):
-        return(self.__service[roomid].getUser(idx))
+    def getUser(self, roomid, peer):
+        playerId = self.__service[roomid].getPlayerId(peer)
+        return(self.__service[roomid].getPlayer(playerId))
 
     def getUserLocation(self, peer):
         return(self.__userlocation[peer])
-
-    def getUsers(self, roomid):
-        return(self.__service[roomid].getControllers())
 
     def listRooms(self):
         return(str(self.__service))

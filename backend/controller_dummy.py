@@ -1,4 +1,5 @@
 import sys
+from Commands import Commands, Targets, Defaults
 
 from twisted.python import log
 from twisted.internet import reactor
@@ -20,7 +21,13 @@ class MyClientFactory(WebSocketClientFactory):
 class MyClientProtocol(WebSocketClientProtocol):
 
     def sendLogin(self, client, roomid):
-        loginrequest = u"login|master|" + roomid
+        d = Defaults.DELIMETER
+        e = Defaults.TARGET_DELIMETER
+        # loginrequest = u"login|master|" + roomid
+        loginrequest = Commands.LOGIN + d + \
+                        Targets.MASTER + e + roomid + e + Defaults.NONE + d + \
+                     "Hi There"
+        print("Sending:", loginrequest)
         self.sendMessage(loginrequest.encode('utf8'), False)
 
     def onConnect(self, response):
@@ -32,7 +39,13 @@ class MyClientProtocol(WebSocketClientProtocol):
         roomid = self.factory.roomid
         self.sendLogin(self, roomid)
 
-        self.sendMessage(("message|master|Whats up?").encode('utf8'), isBinary = False)
+        """ <cmd> | targetType:roomid:none |<payload> """
+        d = Defaults.DELIMETER
+        e = Defaults.TARGET_DELIMETER
+        msg = Commands.MESSAGE + d + \
+        Targets.MASTER + e + roomid + e + Defaults.NONE + d + \
+            "Whats up?"
+        self.sendMessage(msg.encode('utf8'), isBinary = False)
 
         # check if login granted
 

@@ -1,63 +1,45 @@
-
+from Commands import Commands, Targets, Defaults
 
 class Room(object):
-    def __init__(self, User, nPlayers = 2):
-        if not User.isMaster():
+    def __init__(self, User, maxPlayer = 2):
+        if not User.isMaster:
             raise Exception("Not a master user")
 
-        roomid = User.roomid()
+        roomid = User.roomid
         if type(roomid) == type(int()):
             roomid = str(roomid).zfill(4)
-        self.__roomid = roomid
+        self.roomid = roomid
+        self.__maxPlayer = maxPlayer
 
-        self.__master = User
-        self.master = self.__master
+        self.master = User
 
-        self.__controller = [None]*nPlayers
+        self.__controller = {}      # <playerId>:<User>, playerId: player1,...,n, n <= maxPlayer
+        self.__controllerMap = {}   # <peer>:<playerId>
 
     def addController(self, User):
-        success = False
         """ add controller to list, check if valid """
-        n = sum([1 for x in self.__controller if x == None])
-        print("Slots left: " + str(n))
-        if n > 0:
-            i = self.__controller.index(None)
-            print("Added user to slot", i)
-            self.__controller[i] = User
-            success = True
-        else:
-            success = False
-            # User.client().sendMessage2("Room is full. Closing...")
-            # User.client().sendClose()
+        if len(self.__controller) < self.__maxPlayer:
+            playerId = Targets.CONTROLLER + str(len(self.__controller) + 1)
 
-        return success
+            self.__controllerMap[User.peer] = playerId
+            self.__controller[playerId] = User
+
+            return(True)
+
+        return False
+
+    def getPlayer(self, playerId):
+        return(self.__controller[playerId])
+
+    def getPlayerByPeer(self, peer):
+        playerId = self.__controllerMap[peer]
+        return(self.__controller[playerId])
+
+    def getPlayerId(self, peer):
+        return(self.__controllerMap[peer])
 
     def delController(self, peer):
         """ remove controller from list """
-        contpeer = [x.peer for x in self.__controller if x != None]
-        print(peer, contpeer)
-        i = contpeer.index(peer)
-        del self.__controller[i]
-        print("Removed controller "+ peer + " from room " + self.__roomid)
-
-    def getMaster(self):
-        return(self.__master)
-
-    def getControllers(self):
-        return([x for x in self.__controller if x != None])
-
-    def getPlayerId(self, peer):
-        """ remove controller from list """
-        contpeer = [x.peer for x in self.__controller if x != None]
-        print (contpeer)
-        print (contpeer.index)
-        return contpeer.index(peer)+1
-
-    def getAllUser(self):
-        return([self.__master] + [x for x in self.__controller if x != None])
-
-    def getUser(self, i):
-        return(self.__controller[i])
-
-    def roomid(self):
-        return(self.__roomid)
+        playerId = self.__controllerMap.pop(peer)
+        user = self.__controller.pop(playerId)
+        print("\'"+ playerId + "\' left the room \'" + self.roomid + "\'")
