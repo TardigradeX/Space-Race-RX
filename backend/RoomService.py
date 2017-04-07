@@ -53,10 +53,10 @@ class RoomService(object):
             # send message from player to master
             playerId = room.getPlayerId(sourcepeer)
             print (playerId)
-            print("Message from player"+sourcepeer+"=" + str(playerId) +"to"+target)
+            print("Message from player",sourcepeer, "=" , str(playerId), "to", target)
             message = Commands.MESSAGE + Defaults.DELIMETER + \
                       Targets.MASTER + Defaults.TARGET_DELIMETER +\
-                      roomId + Defaults.TARGET_DELIMETER + Targets.PLAYER+str(playerId)+Defaults.DELIMETER+payload
+                      roomId + Defaults.TARGET_DELIMETER + str(playerId)+Defaults.DELIMETER+payload
             room.master.client.sendMessage2(message)
 
         elif targetType.startswith(Targets.CONTROLLER):
@@ -78,6 +78,7 @@ class RoomService(object):
 
     def addRoom(self, client, nPlayers = 4):
         if not client.peer in self.__freeclients:
+            print("Client unknown")
             return(None)
         ## any client can become a master here, handling within server.py
         user = User(client, self.__lastroomid, isMaster = True )
@@ -135,4 +136,19 @@ class RoomService(object):
         return(self.__userlocation[peer])
 
     def listRooms(self):
-        return(str(self.__service))
+        return(self.__service)
+
+    def controllCommand(self, sourcepeer, command):
+        cmd, target, payload = command.split("|")
+        targetType, roomid, targetPlayerId = target.split(Defaults.TARGET_DELIMETER)
+
+        room = self.__service[self.__userlocation[sourcepeer]]
+        print("Room stats:")
+        print(room.roomid)
+        print(room.master.peer)
+        print("")
+        sourceId = room.getPlayerId(sourcepeer)
+        if targetType == Targets.MASTER:
+            room.master.client.sendMessage2(sourceId + "|" + command)
+        elif targetType == Targets.CONTROLLER:
+            room.getPlayer(targetType).client.sendMessage2(sourceId+"|"+command)

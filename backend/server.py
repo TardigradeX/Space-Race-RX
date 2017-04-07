@@ -6,6 +6,8 @@ import enum
 from Room import Room
 from User import User
 from Commands import Commands, Targets , Defaults
+import CommandFactory as cf
+
 from RoomService import RoomService
 from twisted.web.static import File
 from twisted.python import log
@@ -42,6 +44,10 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
     def passMessage(self, sourcepeer, target, payload):
         self.roomService.passMessage(sourcepeer, target, payload)
 
+    def controllCommand(self, sourcepeer, cmd):
+        msg = cf.createGameCommand(cmd, Targets.MASTER)
+        self.roomService.controllCommand(sourcepeer, msg)
+
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
@@ -52,65 +58,60 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         pattern = re.compile('.+\|.+\|.+')
         isCmd = bool(pattern.search(payload))
         if not isCmd:
+            print("Not a command")
             return(None)
         """
-            Recognized commands are of form cmd|target|payload
-            if payload = '$', it is an empty strin
-            Login - master: login|server,new|none
-              - controller: login|server,roomid|none
+            Commands are standardized. CommandsFactory.py helps creating
+            commands
+            Format:
+            <cmd>|<target>|<payload>
+            - <cmd> being defined in Commands.py/Commands.js
+            - <target> := <targetType>:<roomid>:<playerId>
+            - <payload> any content
 
-            Logout          logout|server|$
-                [not yet implemented]
-
-             Message:       message|target|Message
-                target := (master, controller1, ..., controller4)
         """
 
         cmd, target, payload = payload.split(Defaults.DELIMETER)
+        targetType, roomid, targetPlayerId = target.split(Defaults.TARGET_DELIMETER)
 
-        targetType = None
-        roomId = None
-        targetPlayerId = None
-
+        """CREATING A DICT OUT OF THE COMMANDS MAY IMPROVE CMD IDENTIFICATION"""
         if cmd == Commands.LOGIN:
-            tmp = target.split(Defaults.TARGET_DELIMETER)
-            if len(tmp) == 2:
-                targetType, roomId = tmp
-            elif len(tmp) == 3:
-                targetType, roomId, targetPlayerId = tmp
+            if roomid == Defaults.NONE:
+                newRoomid = self.factory.addRoom(self)
+                self.sendMessage2('Your assigned room id: ' + str(newRoomid))
             else:
-                raise Exception("Wrong target format")
-                
-            if roomId.isdigit() and len(roomId) == 4:
-                success, playerId = self.factory.registerController(self, roomId)
+                success, playerId = self.factory.registerController(self, roomid)
                 if not success:
-                    self.sendMessage2("Could not sign up to room"+ str(roomId))
+                    self.sendMessage2("Could not sign up to room"+ str(roomid))
                     self.sendClose()
                 else:
-                    self.sendMessage2(
-                        Commands.MESSAGE + Defaults.DELIMETER +
-                        Targets.CONTROLLER + Defaults.TARGET_DELIMETER + roomId
-                        +Defaults.TARGET_DELIMETER + str(playerId) + Defaults.DELIMETER +
-                    "WELCOME TO SERVER")
-                    masterTarget = Targets.MASTER + Defaults.TARGET_DELIMETER + roomId
-                    self.factory.passMessage(self.peer, masterTarget, "New Player")
-                    print("Controller " + self.peer + " registered to room" + roomId)
-            else:
-                newRoomId = self.factory.addRoom(self)
-                self.sendMessage2('Your assigned room id: ' + str(newRoomId))
-
+                    self.sendMessage2(cf.createLoginResponse(targetType, roomid,\
+                                        playerId))
+                    self.parseMessage(\
+                        cf.createMessage(\
+                                self.peer, Targets.MASTER, roomid, \
+                                Defaults.NONE, "New player"))
+                    print("Controller " + self.peer + " registered to room" + roomid)
 
         elif cmd == Commands.MESSAGE:
-            """
-          messages should be described as follows
-           message -to master:      message|master,roomid|payload
-                  - to controller:  message|controller,roomid, 2|payload
-       """
-            self.factory.passMessage(self.peer, target, payload)
+            sourcepeer = self.peer
+            cTarget = target
+            cPayload = payload
+            self.factory.passMessage(sourcepeer, cTarget, cPayload)
 
         elif cmd == Commands.LOGOUT:
             print("[not implemented] " + self.peer + "sent a logout ")
             pass
+
+        elif cmd == Commands.LEFTROLL:
+            self.factory.controllCommand(self.peer, Commands.LEFTROLL)
+
+        elif cmd == Commands.RIGHTROLL:
+            self.factory.controllCommand(self.peer, Commands.RIGHTROLL)
+
+        elif cmd == Commands.THRUST:
+            self.factory.controllCommand(self.peer, Commands.THRUST)
+
         else:
             print("Unknown command - unable to comply")
 

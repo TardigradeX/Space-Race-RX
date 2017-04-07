@@ -45,6 +45,7 @@ class MyClientProtocol(WebSocketClientProtocol):
         msg = Commands.MESSAGE + d + \
         Targets.MASTER + e + roomid + e + Defaults.NONE + d + \
             "Whats up?"
+        print(msg)
         self.sendMessage(msg.encode('utf8'), isBinary = False)
 
         # check if login granted
