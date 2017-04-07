@@ -20,6 +20,6 @@ export const targets = {
 };
 
 export const DELIMETER = "|";
-export const TARGET_DELIMETER = ":";
+export const TARGET_DELIMETER = ",";
 export const NONE = "none";
 export const NEW = "new";

@@ -5,7 +5,7 @@ import enum
 
 from Room import Room
 from User import User
-from Commands import Commands, Targets , Default
+from Commands import Commands, Targets , Defaults
 from RoomService import RoomService
 from twisted.web.static import File
 from twisted.python import log
@@ -55,9 +55,9 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             return(None)
         """
             Recognized commands are of form cmd|target|payload
-            if payload = '$', it is an empty string
-            Login - master: login|server:new|none
-              - controller: login|server:roomid|none
+            if payload = '$', it is an empty strin
+            Login - master: login|server,new|none
+              - controller: login|server,roomid|none
 
             Logout          logout|server|$
                 [not yet implemented]
@@ -67,21 +67,23 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         """
 
 
-        cmd, target, payload = payload.split('|')
+        cmd, target, payload = payload.split(Defaults.DELIMETER)
 
         if cmd == Commands.LOGIN:
-            targetType, roomId = target.split(':')
+            targetType, roomId = target.split(Defaults.TARGET_DELIMETER)
             if roomId.isdigit() and len(roomId) == 4:
-                success = self.factory.registerController(self, roomId)
+                success, playerId = self.factory.registerController(self, roomId)
                 if not success:
                     self.sendMessage2("Could not sign up to room"+ str(roomId))
                     self.sendClose()
                 else:
                     self.sendMessage2(
-                        Commands.MESSAGE + Default.DELIMETER +
-                        Targets.CONTROLLER + Default.TARGET_DELIMETER + roomId + Default.DELIMETER +
+                        Commands.MESSAGE + Defaults.DELIMETER +
+                        Targets.CONTROLLER + Defaults.TARGET_DELIMETER + roomId
+                        +Defaults.TARGET_DELIMETER + str(playerId) + Defaults.DELIMETER +
                     "WELCOME TO SERVER")
-                    self.factory.passMessage(self.peer, target, "New Player")
+                    masterTarget = Targets.MASTER + Defaults.TARGET_DELIMETER + roomId
+                    self.factory.passMessage(self.peer, masterTarget, "New Player")
                     print("Controller " + self.peer + " registered to room" + roomId)
             else:
                 newRoomId = self.factory.addRoom(self)
@@ -91,8 +93,8 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         elif cmd == Commands.MESSAGE:
             """
           messages should be described as follows
-           message -to master:      message|master:roomid|payload
-                  - to controller:  message|controller:roomid|payload
+           message -to master:      message|master,roomid|payload
+                  - to controller:  message|controller,roomid, 2|payload
        """
             self.factory.passMessage(self.peer, target, payload)
 

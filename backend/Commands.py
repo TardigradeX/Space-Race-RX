@@ -23,7 +23,7 @@ class Targets(str, Enum):
     SERVER = "server"
     PLAYER = "player"
 
-class Default(str, Enum):
+class Defaults(str, Enum):
     NONE = 'none'
     DELIMETER = '|'
-    TARGET_DELIMETER = ':'
+    TARGET_DELIMETER = ','

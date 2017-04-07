@@ -1,6 +1,6 @@
 from Room import Room
 from User import User
-from Commands import Commands, Targets
+from Commands import Commands, Targets, Defaults
 
 class RoomService(object):
     def __init__(self):
@@ -35,13 +35,16 @@ class RoomService(object):
             print("User not registered")
             return(False)
 
-        targetType, roomId = target.split(':')
+        targetType, roomId = target.split(Defaults.TARGET_DELIMETER)
         room = self.__service[roomId]
         if targetType.startswith(Targets.MASTER):
             # send message from player to master
-            print("Message from player",sourcepeer, "to master")
             playerId = room.getPlayerId(sourcepeer)
-            message = Commands.MESSAGE + '|' + Targets.MASTER + ':' + Targets.PLAYER+playerId+'|'+payload
+            print (playerId)
+            print("Message from player"+sourcepeer+"=" + str(playerId) +"to"+target)
+            message = Commands.MESSAGE + Defaults.DELIMETER + \
+                      Targets.MASTER + Defaults.TARGET_DELIMETER +\
+                      roomId + Defaults.TARGET_DELIMETER + Targets.PLAYER+str(playerId)+Defaults.DELIMETER+payload
             room.getMaster().client().sendMessage2(message)
 
         elif targetType.startswith(Targets.CONTROLLER):
@@ -87,7 +90,7 @@ class RoomService(object):
         if success:
             self.__userlocation[user.peer] = user.roomid()
             self.__freeclients.remove(client.peer)
-            return(success, self.__service[user.roomid()].getPlayerId)
+            return(success, self.__service[user.roomid()].getPlayerId(client.peer))
 
         return(False,"")
 
