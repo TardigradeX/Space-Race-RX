@@ -1,6 +1,7 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
+import {DELIMETER, TARGET_DELIMETER} from "../commands";
 
 export default class extends Phaser.State {
   init (websocket, roomId, players) {
@@ -58,16 +59,16 @@ export default class extends Phaser.State {
     update () {
 
         if (this.spaceShip.movement == 'thrust') {
-            this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 400, this.spaceShip.body.acceleration);
+            this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 800, this.spaceShip.body.acceleration);
         } else {
             this.spaceShip.body.acceleration.set(0);
         }
 
         if (this.spaceShip.movement == 'left') {
-            this.spaceShip.body.angularVelocity = -200;
+            this.spaceShip.body.angularVelocity = -300;
         }
         else if (this.spaceShip.movement == 'right') {
-            this.spaceShip.body.angularVelocity = 200;
+            this.spaceShip.body.angularVelocity = 300;
         } else {
             this.spaceShip.body.angularVelocity = 0;
         }

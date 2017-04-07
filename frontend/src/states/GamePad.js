@@ -4,21 +4,22 @@ import * as strings from "../commands";
 
 export default class extends Phaser.State {
     init(websocket, roomId) {
-        console.log("started with socket and roomid");
+        console.log("roomId "+ roomId);
+        console.log("socket "+websocket);
         this.websocket = websocket;
         this.roomId = roomId;
     }
 
     preload() {
         // Log errors
-        this.websocket.onerror = function (error) {
+       /* this.websocket.onerror = function (error) {
             console.log('WebSocket Error ' + error);
         };
 
         this.websocket.onmessage = function (message) {
             console.log("Message Incoming ... ")
             console.log(message.data);
-        }
+        }*/
 
         this.leftDown = false;
         this.rightDown = false;
@@ -76,16 +77,17 @@ export default class extends Phaser.State {
          } else if(this.rightDown) {
             payload = strings.commands.RIGHTROLL;
          }else {
-            payload = strings.commands.NONE;
+            payload = strings.NONE;
          }
 
          let message = strings.commands.MESSAGE + strings.DELIMETER +
              strings.targets.MASTER + strings.TARGET_DELIMETER + this.roomId + strings.TARGET_DELIMETER + 1 + strings.DELIMETER
         + payload;
 
-        console.log(payload);
+        console.log(" PAYLOAD IS : " + payload);
+        console.log("REady state "  + this.websocket.readyState);
         this.websocket.send(message);
-
+        console.log("REady state "  + this.websocket.readyState);
     }
 
 

@@ -35,7 +35,7 @@ class RoomService(object):
             print("User not registered")
             return(False)
 
-        targetType, roomId = target.split(Defaults.TARGET_DELIMETER)
+        targetType, roomId = target.split(Defaults.TARGET_DELIMETER)[0:2]
         room = self.__service[roomId]
         if targetType.startswith(Targets.MASTER):
             # send message from player to master

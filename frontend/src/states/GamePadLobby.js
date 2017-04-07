@@ -23,11 +23,14 @@ export default class extends Phaser.State {
             console.log('WebSocket Error ' + error);
         };
 
+        // Log errors
+        this.websocket.onclose = function () {
+            console.log('WebSocket Closed, Should not happen ');
+        };
+
         this.websocket.onmessage = function (message) {
-            console.log("Message Incoming, WILL START GAMEPAD ... ")
-            console.log(message.data);
+            console.log("STARTING NEW STATE")
             this.state.start('GamePad', false, false, this.websocket, this.roomId);
-            console.log('should have started');
         }.bind(this);
     }
 
