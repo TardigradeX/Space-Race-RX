@@ -5,7 +5,7 @@ import enum
 
 from Room import Room
 from User import User
-from Commands import Commands, Targets , Defaults
+from Commands import Commands, Targets , Defaults, Payloads
 from RoomService import RoomService
 from twisted.web.static import File
 from twisted.python import log
@@ -87,7 +87,11 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
                     print("Controller " + self.peer + " registered to room" + roomId)
             else:
                 newRoomId = self.factory.addRoom(self)
-                self.sendMessage2('Your assigned room id: ' + str(newRoomId))
+                self.sendMessage2(
+                    Commands.MESSAGE + Defaults.DELIMETER
+                    + Targets.MASTER + Defaults.TARGET_DELIMETER + str(newRoomId) + Defaults.DELIMETER + Payloads.SIGNUP
+                )
+
 
 
         elif cmd == Commands.MESSAGE:
