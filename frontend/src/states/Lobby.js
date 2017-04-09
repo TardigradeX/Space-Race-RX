@@ -32,8 +32,10 @@ export default class extends Phaser.State {
       }.bind(this);
 
       this.websocket.onclose = function(close){
-        this.send("logout|room|byebye")
-      }
+        console.log("Sending log out");
+        this.websocket.send("logout|server,none,none|byebye")
+        this.state.start("DummyDecide")
+      }.bind(this)
     }
 
     create () {

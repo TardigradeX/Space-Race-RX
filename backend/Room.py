@@ -48,7 +48,6 @@ class Room(object):
         playerId = self.__controllerMap.pop(peer)
         user = self.__controller.pop(playerId)
         user.client.sendClose()
-        print("\'"+ playerId + "\' left the room \'" + self.roomid + "\'")
 
     def getAllUser(self):
         return([self.master.peer] + [self.__controller[k].peer for k in self.__controller])

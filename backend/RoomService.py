@@ -138,7 +138,7 @@ class RoomService(object):
             return(success, userList)
         else:
             success = self.__delUser(peer)
-            return(True, userList)
+            return(success, userList)
 
     def getUser(self, roomid, peer):
         playerId = self.__service[roomid].getPlayerId(peer)

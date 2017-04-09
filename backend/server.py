@@ -129,7 +129,10 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         print(self.factory.roomService.listRooms())
 
     def onClose(self, wasClean, code, reason):
+        if not wasClean:
+            print(code, reason)
         self.factory.unregister(self.peer)
+
 
 if __name__ == "__main__":
     port = 9000 # tcp port
