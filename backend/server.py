@@ -38,8 +38,8 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
         return success, playerId
 
     def unregister(self, peer):
-        success, isRoom = self.roomService.delClient(peer)
-        print("worked",success,", isMaster:", isRoom)
+        success, userList = self.roomService.delClient(peer)
+        print("Unregistering", peer + ": worked", success,", userList:", userList)
 
     def passMessage(self, sourcepeer, target, payload):
         self.roomService.passMessage(sourcepeer, target, payload)
@@ -47,7 +47,6 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
     def controllCommand(self, sourcepeer, cmd):
         msg = cf.createGameCommand(cmd, Targets.MASTER)
         self.roomService.controllCommand(sourcepeer, msg)
-
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 

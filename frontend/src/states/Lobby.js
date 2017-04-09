@@ -70,7 +70,7 @@ export default class extends Phaser.State {
                 players += "Player "+i+"\t";
             }
             let text= this.game.add.text(this.game.width / 2, 20, players);
+            console.log(players);
         }
-
     }
 }

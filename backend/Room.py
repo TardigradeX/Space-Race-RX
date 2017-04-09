@@ -31,6 +31,11 @@ class Room(object):
     def getPlayer(self, playerId):
         return(self.__controller[playerId])
 
+    def getPlayers(self):
+        keys1 = list(self.__controller.keys())
+        keys1.sort()
+        return([self.__controller[k] for k in keys1])
+
     def getPlayerByPeer(self, peer):
         playerId = self.__controllerMap[peer]
         return(self.__controller[playerId])
@@ -42,9 +47,8 @@ class Room(object):
         """ remove controller from list """
         playerId = self.__controllerMap.pop(peer)
         user = self.__controller.pop(playerId)
+        user.client.sendClose()
         print("\'"+ playerId + "\' left the room \'" + self.roomid + "\'")
 
     def getAllUser(self):
         return([self.master.peer] + [self.__controller[k].peer for k in self.__controller])
-
-    

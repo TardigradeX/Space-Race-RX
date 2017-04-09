@@ -37,13 +37,16 @@ export default class extends Phaser.State {
             this.keyPress(this.game.input.keyboard.event.keyCode)
         }.bind(this);
 
-        this.sendRoomId = this.game.add.button(0, 0, 'button', null, this, 0, 1, 0, 1);
+        this.sendRoomId = this.game.add.button(0, 0, 'button', null, this.endSession, 0, 1, 0, 1);
         this.sendRoomId.events.onInputDown.add(function () {
             this.registerPad();
         }, this);
 
     }
 
+    endSession(){
+      this.websocket.close()
+    }
 
     keyPress(keyCode) {
         console.log(keyCode);
@@ -65,9 +68,10 @@ export default class extends Phaser.State {
     registerPad() {
         this.websocket.send(
             commands.LOGIN + DELIMETER +
-            targets.SERVER + TARGET_DELIMETER + this.roomId + DELIMETER +
+            targets.SERVER + TARGET_DELIMETER + this.roomId + TARGET_DELIMETER + NONE + DELIMETER +
             NONE
         );
+
     }
 
     update() {
@@ -81,10 +85,5 @@ export default class extends Phaser.State {
         if(this.connectedMessage.length > 0) {
             let message = this.game.add.text(this.game.width / 2, this.game.height / 3 , this.connectedMessage);
         }
-
     }
-
-
 }
-
-

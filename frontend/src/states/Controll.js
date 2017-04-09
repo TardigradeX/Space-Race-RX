@@ -23,6 +23,10 @@ export default class extends Phaser.State {
             console.log(message.data);
         }
 
+        this.websocket.onclose = function(){
+          console.log("Controller closed")
+        }
+
         this.leftDown = false;
         this.rightDown = false;
     }
@@ -90,5 +94,3 @@ export default class extends Phaser.State {
 
 
 }
-
-
