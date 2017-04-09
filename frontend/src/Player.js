@@ -7,9 +7,15 @@ import {playerStates} from "./commands";
 export class Player {
 
     constructor(id) {
-        console.log("New Players Build Width id" + id);
-        console.log("YEAHAAAA" + playerStates.ALIVE)
         this.id = id;
         this.playerState = playerStates.ALIVE;
+    }
+
+    id(){
+        return this.id;
+    }
+
+    playerState(){
+        return this.playerState;
     }
 }

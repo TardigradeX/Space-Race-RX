@@ -39,7 +39,12 @@ export default class extends Phaser.State {
     }
 
     create () {
+        this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 200, 'button', this.startGame, this, 2, 1, 0);
+    }
 
+
+    startGame() {
+        this.state.start('Game', false, false, this.websocket, this.roomId, this.players);
     }
 
 
@@ -54,8 +59,12 @@ export default class extends Phaser.State {
                 if (payload == 'signup') {
                     this.roomId = target.split(TARGET_DELIMETER)[1];
                 } else {
-                    this.players.push(new Player(1));
-                    this.state.start('Game', false, false, this.websocket, this.roomId, this.players);
+                    let playerId = target.split(TARGET_DELIMETER)[2];
+                    this.players.push(new Player(playerId));
+                    console.log(this.players.length)
+                    for(var i = 0; i < this.players.length; i++) {
+                        console.log("PLAYer" + this.players[i]);
+                    }
                 }
             }
         }

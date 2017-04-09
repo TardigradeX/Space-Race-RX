@@ -8,7 +8,11 @@ export default class extends Phaser.State {
       this.websocket = websocket;
       this.roomId = roomId;
       this.players = players;
+      for(let i = 0; i < players.length; i++) {
+          console.log("PLAYer" + players[i]);
+      }
   }
+
   preload () {
       // Log errors
       this.websocket.onerror = function (error) {
@@ -29,8 +33,8 @@ export default class extends Phaser.State {
             let payload = mySplit[2];
             console.log(mySplit);
             if (cmd == 'message') {
-                this.playerId = target.split(TARGET_DELIMETER)[2]; //todo later go to correct player
-                this.spaceShip.movement = payload;
+                let playerId = target.split(TARGET_DELIMETER)[2]; //todo later go to correct player
+                this.spaceShips[playerId].movement = payload;
             }
         }
     }
@@ -47,7 +51,15 @@ export default class extends Phaser.State {
 
     this.factory = new SpaceShipFactory({game:this.game});
 
+
     this.spaceShip = this.factory.getSpaceShip(this.world.centerX, this.world.centerY, 'spaceship');
+    this.spaceShips = new Map();
+
+      for(let i = 0; i < this.players.length; i++) {
+          console.log("PLAYer" + this.players[i]);
+          this.spaceShips.set(this.players[i].id(), this.factory.getSpaceShip(this.world.centerX, this.world.centerY, 'spaceship'));
+      }
+      console.log(this.spaceShips);
   }
 
   render () {
@@ -57,21 +69,23 @@ export default class extends Phaser.State {
   }
 
     update () {
+        for (let spaceShip of this.spaceShips.values()) {
 
-        if (this.spaceShip.movement == 'thrust') {
-            this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 800, this.spaceShip.body.acceleration);
-        } else {
-            this.spaceShip.body.acceleration.set(0);
-        }
+          if (spaceShip.movement == 'thrust') {
+              this.game.physics.arcade.accelerationFromRotation(spaceShip.rotation - Math.PI / 2, 800, spaceShip.body.acceleration);
+          } else {
+              spaceShip.body.acceleration.set(0);
+          }
 
-        if (this.spaceShip.movement == 'left') {
-            this.spaceShip.body.angularVelocity = -300;
-        }
-        else if (this.spaceShip.movement == 'right') {
-            this.spaceShip.body.angularVelocity = 300;
-        } else {
-            this.spaceShip.body.angularVelocity = 0;
-        }
+          if (spaceShip.movement == 'left') {
+              spaceShip.body.angularVelocity = -300;
+          }
+          else if (spaceShip.movement == 'right') {
+              spaceShip.body.angularVelocity = 300;
+          } else {
+              spaceShip.body.angularVelocity = 0;
+          }
+      }
 
     }
 
