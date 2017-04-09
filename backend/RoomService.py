@@ -11,34 +11,29 @@ class RoomService(object):
 
         self.__lastroomid = 0
 
-    def __delUser(self, peer):
+    def __deleteMaster(self, peer):
         success = False
-        if not peer in self.__userlocation:
-            return (success, None)
-
         roomid = self.__userlocation[peer]
+        userList = self.__service[roomid].getPlayers()
+        for x in userList:
+            self.__deleteController(x.peer)
+            x.client.sendClose()
+            print("Close sent to", x.client.peer)
 
-        self.__service[roomid].delController(peer)
         self.__userlocation.pop(peer)
-        success = True
-        return(success)
-
-    def __delRoom(self, roomid):
-        success = False
-        if not roomid in self.__service:
-            return (success, None)
-
-        """ Take care of controllers """
-        userList = [x.peer for x in self.__service[roomid].getPlayers()]
-        for peer in userList:
-            self.delClient(peer)
-
-        print(self.__service[roomid].master.peer)
-        self.__service[roomid].master.client.sendClose()
-        self.__userlocation.pop(self.__service[roomid].master.peer)
         self.__service.pop(roomid)
         success = True
-        return(success, userList)
+        return(success, None)
+
+    def __deleteController(self, peer):
+        if not peer in self.__userlocation:
+            return(False, None)
+
+        success = False
+        roomid = self.__userlocation.pop(peer)
+        self.__service[roomid].deleteController(peer)
+        success = True
+        return(success, None)
 
     def passMessage(self, sourcepeer, target, payload):
         """ identify player """
@@ -120,32 +115,31 @@ class RoomService(object):
 
         return(False,"")
 
-    def delClient(self, peer):
-        success = False
-        userList = None
-        """
-        return <success, clientList[]>
-         - clientList is for master, None otherwise
-        """
-        if not peer in self.__userlocation:
-            print("Client not in list")
-            return(success, userList)
-
-        roomid = self.__userlocation[peer]
-        room = self.__service[roomid]
-        if peer == room.master.peer:
-            success, userList = self.__delRoom(roomid)
-            return(success, userList)
-        else:
-            success = self.__delUser(peer)
-            return(success, userList)
-
     def getUser(self, roomid, peer):
         playerId = self.__service[roomid].getPlayerId(peer)
         return(self.__service[roomid].getPlayer(playerId))
 
-    def getUserLocation(self, peer):
+    def getUserRoomid(self, peer):
         return(self.__userlocation[peer])
+
+    def isMaster(self, peer):
+        roomid = self.__userlocation[peer]
+        if not roomid in self.__service:
+            return False
+        return(self.__service[roomid].peer == peer)
+
+    def deleteClient(self, peer):
+        success = False
+        userList = None
+        if not peer in self.__userlocation:
+            return(True, None)
+
+        if self.isMaster(peer):
+            success, userList = self.__deleteMaster(peer)
+        else:
+            success, userList = self.__deleteController(peer)
+        print("<<<", peer, "deleted")
+        return(success, userList)
 
     def listRooms(self):
         return(self.__service)
@@ -157,7 +151,7 @@ class RoomService(object):
         room = self.__service[self.__userlocation[sourcepeer]]
         print("Room stats:")
         print(room.roomid)
-        print(room.master.peer)
+        print(room.peer)
         print("")
         sourceId = room.getPlayerId(sourcepeer)
         if targetType == Targets.MASTER:

@@ -12,6 +12,7 @@ class Room(object):
         self.__maxPlayer = maxPlayer
 
         self.master = User
+        self.peer = User.peer
 
         self.__controller = {}      # <playerId>:<User>, playerId: player1,...,n, n <= maxPlayer
         self.__controllerMap = {}   # <peer>:<playerId>
@@ -43,11 +44,9 @@ class Room(object):
     def getPlayerId(self, peer):
         return(self.__controllerMap[peer])
 
-    def delController(self, peer):
-        """ remove controller from list """
-        playerId = self.__controllerMap.pop(peer)
-        user = self.__controller.pop(playerId)
-        user.client.sendClose()
-
     def getAllUser(self):
         return([self.master.peer] + [self.__controller[k].peer for k in self.__controller])
+
+    def deleteController(self, peer):
+        playerid = self.__controllerMap.pop(peer)
+        self.__controller.pop(playerid)

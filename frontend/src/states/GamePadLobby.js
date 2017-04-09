@@ -28,6 +28,10 @@ export default class extends Phaser.State {
             console.log(message.data);
             this.connectedMessage = message.data;
         }.bind(this);
+        this.websocket.onclose = function(close){
+          console.log(close);
+          this.state.start("DummyDecide")
+        }.bind(this)
     }
 
     create() {

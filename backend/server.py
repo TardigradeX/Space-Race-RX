@@ -37,9 +37,16 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
         (success, playerId) = self.roomService.addUser(client, roomid)
         return success, playerId
 
-    def unregister(self, peer):
-        success, userList = self.roomService.delClient(peer)
-        print("Unregistering", peer + ": worked", success,", userList:", userList)
+    def unregisterClient(self, peer):
+        """
+        use recursive function to unregister client
+        onClose() of client triggers unregister
+        case1: client is room, sendClose for controllers, remove room
+        case2: client is controller, remove controller
+        """
+        print(self.roomService.listRooms())
+        success, userList = self.roomService.deleteClient(peer)
+        print("Unregistered", peer + ": worked", success,", userList:", userList)
 
     def passMessage(self, sourcepeer, target, payload):
         self.roomService.passMessage(sourcepeer, target, payload)
@@ -129,9 +136,10 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         print(self.factory.roomService.listRooms())
 
     def onClose(self, wasClean, code, reason):
+        print("Protocol-level closing", self.peer)
         if not wasClean:
             print(code, reason)
-        self.factory.unregister(self.peer)
+        self.factory.unregisterClient(self.peer)
 
 
 if __name__ == "__main__":

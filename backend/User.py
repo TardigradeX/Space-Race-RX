@@ -9,10 +9,4 @@ class User():
             roomid = str(roomid).zfill(4)
         self.roomid = roomid
         self.isMaster = isMaster
-        self.client.onClose = self.onClose
-
-    def onClose(self, wasClean, code, reason):
-        if not wasClean:
-            print(self.peer, code, reason)
-        else:
-            print(self.peer,'signed off')
+    
