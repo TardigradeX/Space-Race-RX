@@ -37,15 +37,20 @@ export default class extends Phaser.State {
             this.keyPress(this.game.input.keyboard.event.keyCode)
         }.bind(this);
 
-        this.sendRoomId = this.game.add.button(0, 0, 'button', null, this.endSession, 0, 1, 0, 1);
+        this.sendRoomId = this.game.add.button(0, 0, 'button', null, null, 0, 1, 0, 1);
         this.sendRoomId.events.onInputDown.add(function () {
             this.registerPad();
         }, this);
 
+        this.closeCon = this.game.add.button(0, 200, 'button', null, null, 0, 1, 0, 1);
+        this.closeCon.events.onInputDown.add(function () {
+            this.endSession();
+        }, this);
     }
 
     endSession(){
       this.websocket.close()
+      this.state.start('DummyDecide')
     }
 
     keyPress(keyCode) {
