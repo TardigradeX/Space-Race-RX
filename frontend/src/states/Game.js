@@ -1,69 +1,67 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
-import SpaceShip from '../sprites/spaceship'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
+import {DELIMETER, TARGET_DELIMETER} from "../commands";
 
 export default class extends Phaser.State {
-  init () {
+  init (websocket, roomId, players) {
+      this.websocket = websocket;
+      this.roomId = roomId;
+      this.players = players;
   }
+
   preload () {
-      self = this
-
-      this.websocket = new WebSocket("ws://localhost:9000/ws");
-
-      // When the connection is open, send some data to the server
-      this.websocket.onopen = function () {
-          console.log("OPENED MASTER SOCKET");
-      };
-
       // Log errors
       this.websocket.onerror = function (error) {
           console.log('WebSocket Error ' + error);
       };
 
       this.websocket.onmessage = function (message) {
-          console.log(message.data);
-          self.spaceShip.movement = message.data;
+          this.parse(message.data)
+      }.bind(this);
+  }
+
+    parse(message) {
+        let mySplit = message.split(DELIMETER);
+        if (mySplit.length == 3) {
+            let cmd = mySplit[0];
+            let target = mySplit[1];
+            let payload = mySplit[2];
+            if (cmd == 'message') {
+                let playerId = target.split(TARGET_DELIMETER)[2];
+                this.spaceShips.get(playerId).movement = payload;
+            }
+        }
+    }
+
+  create () {
+
+    this.factory = new SpaceShipFactory({game:this.game});
+    this.spaceShips = new Map();
+
+      for(let i = 0; i < this.players.length; i++) {
+          this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.world.centerX, this.world.centerY, 'spaceship'));
       }
   }
 
-  create () {
-    const bannerText = 'Xander s Test';
-    let banner = this.add.text(this.world.centerX, this.game.height - 80, bannerText);
-    banner.font = 'Bangers';
-    banner.padding.set(10, 16);
-    banner.fontSize = 40;
-    banner.fill = '#0c83bf';
-    banner.smoothed = false;
-    banner.anchor.setTo(0.5);
+  update () {
+        for (let spaceShip of this.spaceShips.values()) {
 
-    this.factory = new SpaceShipFactory({game:this.game});
+          if (spaceShip.movement == 'thrust') {
+              this.game.physics.arcade.accelerationFromRotation(spaceShip.rotation - Math.PI / 2, 800, spaceShip.body.acceleration);
+          } else {
+              spaceShip.body.acceleration.set(0);
+          }
 
-    this.spaceShip = this.factory.getSpaceShip(this.world.centerX, this.world.centerY, 'spaceship');
-  }
-
-  render () {
-    if (__DEV__) {
-      this.game.debug.spriteInfo(this.spaceShip, 32, 32)
-    }
-  }
-
-    update () {
-
-        if (this.spaceShip.movement == 'thrust') {
-            this.game.physics.arcade.accelerationFromRotation(this.spaceShip.rotation - Math.PI / 2, 350, this.spaceShip.body.acceleration);
-        } else {
-            this.spaceShip.body.acceleration.set(0);
-        }
-
-        if (this.spaceShip.movement == 'left') {
-            this.spaceShip.body.angularVelocity = -300;
-        }
-        else if (this.spaceShip.movement == 'right') {
-            this.spaceShip.body.angularVelocity = 300;
-        } else {
-            this.spaceShip.body.angularVelocity = 0;
-        }
+          if (spaceShip.movement == 'left') {
+              spaceShip.body.angularVelocity = -300;
+          }
+          else if (spaceShip.movement == 'right') {
+              spaceShip.body.angularVelocity = 300;
+          } else {
+              spaceShip.body.angularVelocity = 0;
+          }
+      }
 
     }
 

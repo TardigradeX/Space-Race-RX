@@ -5,8 +5,9 @@ import enum
 
 from Room import Room
 from User import User
-from Commands import Commands, Targets , Defaults
+
 import CommandFactory as cf
+from Commands import Commands, Targets , Defaults, Payloads
 
 from RoomService import RoomService
 from twisted.web.static import File
