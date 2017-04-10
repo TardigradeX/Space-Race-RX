@@ -9,13 +9,15 @@ export const commands = {
 
     LEFTROLL : "left",
     RIGHTROLL : "right",
-    THRUST : "thrust", 
-    NONE : "none"
+    THRUST : "thrust",
+    NONE : "none",
+
+    READY : 'ready'
 };
 
 
 export const targets = {
-     CONTROLLER : "controller",
+   CONTROLLER : "controller",
     MASTER : "master",
     SERVER : "server",
 };
@@ -24,6 +26,12 @@ export const playerStates = {
     ALIVE : 1,
     DEAD : 0,
 };
+
+export const payloads = {
+  JOINED : "joined",
+    SIGNUP : 'signup',
+    FAILED : 'failed'
+}
 
 export const DELIMETER = "|";
 export const TARGET_DELIMETER = ":";

@@ -70,9 +70,8 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             - <target> := <targetType>:<roomid>:<playerId>
             - <payload> any content
         """
-
+        print(payload)
         cmd, target, payload = payload.split(Defaults.DELIMETER)
-        print ("DOODOOO " + target)
         targetType, roomid, targetPlayerId = target.split(Defaults.TARGET_DELIMETER)
 
         """CREATING A DICT OUT OF THE COMMANDS MAY IMPROVE CMD IDENTIFICATION"""
@@ -80,19 +79,18 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             if roomid == Defaults.NONE:
                 newRoomid = self.factory.addRoom(self)
                 self.sendMessage2(cutil.createLoginResponse(\
-                                Targets.MASTER, newRoomid, Targets.MASTER))
+                                Targets.MASTER, newRoomid, Defaults.NONE))
             else:
                 success, playerId = self.factory.registerController(self, roomid)
                 if not success:
-                    self.sendMessage2("Could not sign up to room"+ str(roomid))
+                    self.sendMessage2("Could not sign up to room "+ str(roomid))
                     self.sendClose()
                 else:
-                    self.sendMessage2(cutil.createLoginResponse(targetType, \
-                    roomid, playerId))
-                    self.parseMessage(\
-                        cutil.createMessage(\
-                                self.peer, Targets.MASTER, roomid, \
-                                Defaults.NONE, Payloads.JOINED))
+                    # Send response to 1) controller (self) and 2) master
+                    msg = cutil.createLoginResponse(Targets.CONTROLLER, roomid, playerId)
+                    self.sendMessage2(msg)
+                    msg = cutil.createPlayerJoined(roomid, playerId)
+                    self.factory.roomService.passMessageToMaster(self.peer, msg)
                     print("Controller " + self.peer + " registered to room" + roomid)
 
         elif cmd == Commands.MESSAGE:
@@ -129,11 +127,9 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
     def onMessage(self, payload, isBinary):
         pay1 = payload.decode('utf8')
-        print(self.peer + ": " + pay1) # which peer?
+        print(">>>", self.peer + ": " + pay1) # which peer?
         self.parseMessage(pay1)
-        print("Message parsed")
-        print("Room overview")
-        print(self.factory.roomService.listRooms())
+        print("")
 
     def onClose(self, wasClean, code, reason):
         print("Protocol-level closing", self.peer)

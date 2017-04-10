@@ -39,42 +39,12 @@ class RoomService(object):
         success = True
         return(success, None)
 
-    def passMessage(self, sourcepeer, target, payload):
-        """ identify player """
-        targetType = None
-        roomId = None
-        targetPlayerId = None
-
-        print("Message from", sourcepeer, "to", target)
-        # target defines if source is master
+    def passMessageToMaster(self, sourcepeer, payload):
         if not sourcepeer in self.__userlocation:
-            print("User not registered")
-            return(False)
-
-        targetType, roomId = target.split(Defaults.TARGET_DELIMETER)[0:2]
-        room = self.__service[roomId]
-        if targetType.startswith(Targets.MASTER):
-            # send message from player to master
-            playerId = room.getPlayerId(sourcepeer)
-            print (playerId)
-            print("Message from player",sourcepeer, "=" , str(playerId), "to", target)
-            msg = cutil.createMessage(sourcepeer,\
-                    Targets.MASTER, roomId, str(playerId), payload)
-            # message = Commands.MESSAGE + Defaults.DELIMETER + \
-            #           Targets.MASTER + Defaults.TARGET_DELIMETER +\
-            #           roomId + Defaults.TARGET_DELIMETER + str(playerId)+\
-            #           Defaults.DELIMETER+payload
-            room.master.client.sendMessage2(msg)
-
-        elif targetType.startswith(Targets.CONTROLLER):
-            # send message from master to target player
-            print('Message from master to', target)
-            i = int(targetType.replace(Targets.CONTROLLER, '')) - 1
-            client = room.getUser(i)
-            if client == None:
-                room.master.client.sendMessage2(target+" not found")
-            else:
-                client.client.sendMessage2(payload)
+            print("Client unkown")
+            return(None)
+        roomid = self.__userlocation[sourcepeer]
+        self.__service[roomid].master.client.sendMessage2(payload)
 
     def addNewClient(self, peer):
         """
@@ -99,6 +69,7 @@ class RoomService(object):
 
     def addUser(self, client, roomid):
         if not client.peer in self.__freeclients:
+            print("Client has to be registered first")
             return(False,"")
         if not roomid in self.__service:
             print("Room not available")
@@ -107,6 +78,7 @@ class RoomService(object):
         user = User(client, roomid, isMaster = False)
         print("Adding controller to room", user.roomid)
         success = self.__service[user.roomid].addController(user)
+        print(success)
         if success:
             self.__userlocation[user.peer] = user.roomid
             self.__freeclients.remove(client.peer)

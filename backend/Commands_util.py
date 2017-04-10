@@ -15,7 +15,14 @@ def createLogin(targetType, roomid = dn ):
 def createLoginResponse(targetType, roomid, playerId):
     target = dt.join([targetType, roomid, playerId])
     payload = Payloads.SIGNUP;
-    msg = dd.join([Commands.MESSAGE, target, payload])
+    msg = dd.join([Commands.LOGIN, target, payload])
+    return(msg)
+
+def createPlayerJoined(roomid, playerId):
+    targetType = Targets.MASTER
+    payload = Payloads.JOINED
+    target = dt.join([targetType, roomid, playerId])
+    msg = dd.join([Commands.LOGIN, target, payload])
     return(msg)
 
 def createMessage(source, targetType, roomid, targetPlayer, payload):

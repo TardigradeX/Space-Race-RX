@@ -13,6 +13,8 @@ class Commands(str, Enum):
     THRUST = "thrust"
     NONE = "none"
 
+    READY = 'ready'
+
 class Targets(str, Enum):
     CONTROLLER = 'controller'
     CONTROLLER1 = "controller1"
@@ -31,3 +33,4 @@ class Defaults(str, Enum):
 class Payloads(str, Enum):
     JOINED = "joined"
     SIGNUP = 'signup'
+    FAILED = 'failed'

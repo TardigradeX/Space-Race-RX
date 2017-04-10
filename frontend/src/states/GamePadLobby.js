@@ -29,8 +29,10 @@ export default class extends Phaser.State {
         };
 
         this.websocket.onmessage = function (message) {
+          console.log(message.data);
             this.state.start('GamePad', false, false, this.websocket, this.roomId);
         }.bind(this);
+
         this.websocket.onclose = function(close){
           console.log(close);
           this.state.start("DummyDecide")
@@ -44,43 +46,37 @@ export default class extends Phaser.State {
             this.keyPress(this.game.input.keyboard.event.keyCode)
         }.bind(this);
 
-        this.sendRoomId = this.game.add.button(0, 0, 'button', null, null, 0, 1, 0, 1);
-        this.sendRoomId.events.onInputDown.add(function () {
-            this.registerPad();
-        }, this);
-
-        this.closeCon = this.game.add.button(0, 200, 'button', null, null, 0, 1, 0, 1);
-        this.closeCon.events.onInputDown.add(function () {
-            this.endSession();
-        }, this);
+        // this.sendRoomId = this.game.add.button(0, 0, 'button', null, null, 0, 1, 0, 1);
+        // this.sendRoomId.events.onInputDown.add(function () {
+        //     this.registerPad();
+        // }, this);
+        //
+        // this.closeCon = this.game.add.button(0, 200, 'button', null, null, 0, 1, 0, 1);
+        // this.closeCon.events.onInputDown.add(function () {
+        //     this.endSession();
+        // }, this);
     }
 
-    endSession(){
-      this.websocket.close()
-      this.state.start('DummyDecide')
-    }
+    // endSession(){
+    //   this.websocket.close()
+    //   this.state.start('DummyDecide')
+    // }
 
     keyPress(keyCode) {
-
-        if(keyCode == Phaser.KeyCode.ENTER) {
+        if (keyCode == Phaser.KeyCode.ENTER) {
             this.registerPad();
         } else if(keyCode == Phaser.KeyCode.BACKSPACE) {
             this.roomId = this.roomId.slice(0,-1);
-        }
-        else {
+        } else {
             this.roomId += String.fromCharCode(keyCode);
         }
-
-
     }
 
     registerPad() {
-        this.websocket.send(
-            commands.LOGIN + DELIMETER +
-            targets.SERVER + TARGET_DELIMETER + this.roomId + TARGET_DELIMETER + NONE + DELIMETER +
-            NONE
-        );
-
+      var msg = commands.LOGIN + DELIMETER +
+      targets.SERVER + TARGET_DELIMETER + this.roomId + TARGET_DELIMETER + NONE + DELIMETER +
+      NONE
+      this.websocket.send(msg);
     }
 
     update() {
