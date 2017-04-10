@@ -6,7 +6,6 @@ from enum import Enum
 class Commands(str, Enum):
     LOGIN = 'login'
     LOGOUT = 'logout'
-    SIGNUP = 'signup'
     MESSAGE = 'message'
 
     LEFTROLL = "left"
@@ -26,4 +25,8 @@ class Targets(str, Enum):
 class Defaults(str, Enum):
     NONE = 'none'
     DELIMETER = '|'
-    TARGET_DELIMETER = ','
+    TARGET_DELIMETER = ':'
+
+class Payloads(str, Enum):
+    JOINED = "joined"
+    SIGNUP = 'signup'

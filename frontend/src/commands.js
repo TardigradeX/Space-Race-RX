@@ -19,7 +19,12 @@ export const targets = {
     SERVER : "server",
 };
 
+export const playerStates = {
+    ALIVE : 1,
+    DEAD : 0,
+};
+
 export const DELIMETER = "|";
-export const TARGET_DELIMETER = ",";
+export const TARGET_DELIMETER = ":";
 export const NONE = "none";
 export const NEW = "new";

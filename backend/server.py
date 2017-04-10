@@ -1,11 +1,7 @@
 import sys
-import random
 import re
-import enum
 
-from Room import Room
-from User import User
-from Commands import Commands, Targets , Defaults
+from Commands import Commands, Targets , Defaults, Payloads
 import CommandFactory as cf
 
 from RoomService import RoomService
@@ -78,13 +74,14 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         """
 
         cmd, target, payload = payload.split(Defaults.DELIMETER)
+        print ("DOODOOO " + target)
         targetType, roomid, targetPlayerId = target.split(Defaults.TARGET_DELIMETER)
 
         """CREATING A DICT OUT OF THE COMMANDS MAY IMPROVE CMD IDENTIFICATION"""
         if cmd == Commands.LOGIN:
             if roomid == Defaults.NONE:
                 newRoomid = self.factory.addRoom(self)
-                self.sendMessage2('Your assigned room id: ' + str(newRoomid))
+                self.sendMessage2(cf.createLoginResponse(Targets.MASTER, newRoomid, Targets.MASTER))
             else:
                 success, playerId = self.factory.registerController(self, roomid)
                 if not success:
@@ -96,7 +93,7 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
                     self.parseMessage(\
                         cf.createMessage(\
                                 self.peer, Targets.MASTER, roomid, \
-                                Defaults.NONE, "New player"))
+                                Defaults.NONE, Payloads.JOINED))
                     print("Controller " + self.peer + " registered to room" + roomid)
 
         elif cmd == Commands.MESSAGE:

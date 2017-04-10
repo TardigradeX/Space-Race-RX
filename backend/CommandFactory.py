@@ -1,4 +1,4 @@
-from Commands import Commands, Targets, Defaults
+from Commands import Commands, Targets, Defaults, Payloads
 
 dd = Defaults.DELIMETER
 dt = Defaults.TARGET_DELIMETER
@@ -14,7 +14,7 @@ def createLogin(targetType, roomid = dn ):
 
 def createLoginResponse(targetType, roomid, playerId):
     target = dt.join([targetType, roomid, playerId])
-    payload = "WELCOME TO SERVER"
+    payload = Payloads.SIGNUP;
     msg = dd.join([Commands.MESSAGE, target, payload])
     return(msg)
 
