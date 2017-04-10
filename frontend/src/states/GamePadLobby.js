@@ -23,10 +23,13 @@ export default class extends Phaser.State {
             console.log('WebSocket Error ' + error);
         };
 
+        // Log errors
+        this.websocket.onclose = function () {
+            console.log('WebSocket Closed, Should not happen ');
+        };
+
         this.websocket.onmessage = function (message) {
-            console.log("Message Incoming ... ")
-            console.log(message.data);
-            this.connectedMessage = message.data;
+            this.state.start('GamePad', false, false, this.websocket, this.roomId);
         }.bind(this);
     }
 
@@ -49,8 +52,6 @@ export default class extends Phaser.State {
     }
 
     keyPress(keyCode) {
-        console.log(keyCode);
-        console.log(String.fromCharCode(keyCode).charAt(0));
 
         if(keyCode == Phaser.KeyCode.ENTER) {
             this.registerPad();
@@ -59,7 +60,6 @@ export default class extends Phaser.State {
         }
         else {
             this.roomId += String.fromCharCode(keyCode);
-            console.log(String.fromCharCode(keyCode));
         }
 
 

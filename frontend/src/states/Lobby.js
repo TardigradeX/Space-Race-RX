@@ -1,11 +1,12 @@
 import Phaser from 'phaser'
 import config from '../config'
 import {DELIMETER, targets, commands, NONE, NEW, TARGET_DELIMETER} from "../commands";
+import {Player} from "../Player";
 
 export default class extends Phaser.State {
 
     init () {
-      this.playerCount = 0;
+      this.players = [];
       this.roomId = "";
     }
 
@@ -26,9 +27,8 @@ export default class extends Phaser.State {
       };
 
       this.websocket.onmessage = function (message) {
-          console.log("Message Incoming ... ")
           console.log(message.data);
-          this.roomId = message.data;
+          this.parse(message.data);
       }.bind(this);
 
       this.websocket.onclose = function(close){
@@ -37,40 +37,35 @@ export default class extends Phaser.State {
     }
 
     create () {
+        this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 200, 'button', this.startGame, this, 2, 1, 0);
+    }
 
+
+    startGame() {
+        this.state.start('Game', false, false, this.websocket, this.roomId, this.players);
     }
 
 
     parse(message){
-      console.log(typeof message);
-      var myRe = '.+|.+|.+'
-      var n = message.search(myRe)
-      console.log("mysplit: " + n);
-      if (n == 1){
-        mySplit = message.split('|')
-        cmd = mySplit[0]
-        target = mySplit[1]
-        payload = mySplit[2]
-        if (cmd == 'signup'){
-          console.log('Player signed up. ' + message);
-          this.playerCount ++;
+        let mySplit = message.split(DELIMETER);
+        if(mySplit.length == 3) {
+            let cmd = mySplit[0];
+            let target = mySplit[1];
+            let payload = mySplit[2];
+            if (cmd == 'message') {
+                if (payload == 'signup') {
+                    this.roomId = target.split(TARGET_DELIMETER)[1];
+                } else {
+                    let playerId = target.split(TARGET_DELIMETER)[2];
+                    this.players.push(new Player(playerId));
+                }
+            }
         }
-      }
     }
 
-    update (){
-        if(this.roomId.length > 0) {
-            let text= this.game.add.text(this.game.width / 2, 70, this.roomId);
-        }
-
-        if(this.playerCount > 0) {
-            let style = { font: "20px Courier", fill: "#fff", tabs: 132 };
-            let players = "";
-            for(let i = 0; i < this.playerCount; i++) {
-                players += "Player "+i+"\t";
-            }
-            let text= this.game.add.text(this.game.width / 2, 20, players);
-            console.log(players);
+    update () {
+        if (this.roomId.length > 0) {
+            let text = this.game.add.text(this.game.width / 2, 70, this.roomId);
         }
     }
 }

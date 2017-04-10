@@ -1,27 +1,19 @@
 import Phaser from 'phaser'
-import { centerGameObjects } from '../utils'
+import * as strings from "../commands";
+
 
 export default class extends Phaser.State {
-    init() {
+    init(websocket, roomId) {
+        this.websocket = websocket;
+        this.roomId = roomId;
     }
 
     preload() {
-        this.websocket = new WebSocket("ws://192.168.2.166:9000/ws");
-
-        // When the connection is open, send some data to the server
-        this.websocket.onopen = function () {
-            console.log("OPENED SOCKET");
-        };
-
         // Log errors
         this.websocket.onerror = function (error) {
             console.log('WebSocket Error ' + error);
         };
 
-        this.websocket.onmessage = function (message) {
-            console.log("Message Incoming ... ")
-            console.log(message.data);
-        }
 
         this.websocket.onclose = function(){
           console.log("Controller closed")
@@ -74,22 +66,23 @@ export default class extends Phaser.State {
 
 
     controll() {
+        let payload;
 
         if(this.leftDown && this.rightDown) {
-            console.log("thrust");
-            this.websocket.send('thrust');
+            payload = strings.commands.THRUST;
          } else if(this.leftDown) {
-            this.websocket.send('left');
-            console.log("left");
+            payload = strings.commands.LEFTROLL;
          } else if(this.rightDown) {
-            this.websocket.send('right');
-            console.log("right");
+            payload = strings.commands.RIGHTROLL;
          }else {
-            this.websocket.send('none');
-            console.log("none");
+            payload = strings.NONE;
          }
 
+         let message = strings.commands.MESSAGE + strings.DELIMETER +
+             strings.targets.MASTER + strings.TARGET_DELIMETER + this.roomId + strings.TARGET_DELIMETER + 1 + strings.DELIMETER
+        + payload;
 
+        this.websocket.send(message);
     }
 
 
