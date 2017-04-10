@@ -59,7 +59,6 @@ export default class extends Phaser.State {
                 } else {
                     let playerId = target.split(TARGET_DELIMETER)[2];
                     this.players.push(new Player(playerId));
-                    console.log("Playercount: " + this.players.length);
                 }
             }
         }

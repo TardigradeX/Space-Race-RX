@@ -49,8 +49,6 @@ export default class extends Phaser.State {
 
 
     keyPress(keyCode) {
-        console.log(keyCode);
-        console.log(String.fromCharCode(keyCode).charAt(0));
 
         if(keyCode == Phaser.KeyCode.ENTER) {
             this.registerPad();
@@ -59,7 +57,6 @@ export default class extends Phaser.State {
         }
         else {
             this.roomId += String.fromCharCode(keyCode);
-            console.log(String.fromCharCode(keyCode));
         }
 
 
