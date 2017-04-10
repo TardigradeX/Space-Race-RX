@@ -27,7 +27,7 @@ export default class extends Phaser.State {
       };
 
       this.websocket.onmessage = function (message) {
-          console.log(message.data);
+          console.log("MESSAGE: " + message.data);
           this.parse(message.data);
       }.bind(this);
 
@@ -55,6 +55,7 @@ export default class extends Phaser.State {
             if (cmd == 'message') {
                 if (payload == 'signup') {
                     this.roomId = target.split(TARGET_DELIMETER)[1];
+                    console.log("tHE ID is: " + this.roomId);
                 } else {
                     let playerId = target.split(TARGET_DELIMETER)[2];
                     this.players.push(new Player(playerId));
@@ -67,5 +68,6 @@ export default class extends Phaser.State {
         if (this.roomId.length > 0) {
             let text = this.game.add.text(this.game.width / 2, 70, this.roomId);
         }
+
     }
 }

@@ -71,13 +71,14 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         """
 
         cmd, target, payload = payload.split(Defaults.DELIMETER)
+        print ("DOODOOO " + target)
         targetType, roomid, targetPlayerId = target.split(Defaults.TARGET_DELIMETER)
 
         """CREATING A DICT OUT OF THE COMMANDS MAY IMPROVE CMD IDENTIFICATION"""
         if cmd == Commands.LOGIN:
             if roomid == Defaults.NONE:
                 newRoomid = self.factory.addRoom(self)
-                self.sendMessage2('Your assigned room id: ' + str(newRoomid))
+                self.sendMessage2(cf.createLoginResponse(Targets.MASTER, newRoomid, Targets.MASTER))
             else:
                 success, playerId = self.factory.registerController(self, roomid)
                 if not success:

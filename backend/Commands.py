@@ -25,7 +25,7 @@ class Targets(str, Enum):
 class Defaults(str, Enum):
     NONE = 'none'
     DELIMETER = '|'
-    TARGET_DELIMETER = ','
+    TARGET_DELIMETER = ':'
 
 class Payloads(str, Enum):
     JOINED = "joined"
