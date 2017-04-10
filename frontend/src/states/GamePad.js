@@ -70,18 +70,21 @@ export default class extends Phaser.State {
 
         if(this.leftDown && this.rightDown) {
             payload = strings.commands.THRUST;
+
          } else if(this.leftDown) {
             payload = strings.commands.LEFTROLL;
          } else if(this.rightDown) {
             payload = strings.commands.RIGHTROLL;
          }else {
-            payload = strings.NONE;
+            payload = strings.commands.NONE;
          }
-
-         let message = strings.commands.MESSAGE + strings.DELIMETER +
-             strings.targets.MASTER + strings.TARGET_DELIMETER + this.roomId + strings.TARGET_DELIMETER + 1 + strings.DELIMETER
-        + payload;
-
+         let cmd = payload
+        //  let message = strings.commands.MESSAGE + strings.DELIMETER +
+        //      strings.targets.MASTER + strings.TARGET_DELIMETER + this.roomId +
+        //      strings.TARGET_DELIMETER + 1 + strings.DELIMETER + payload;
+        let target = strings.targets.MASTER + strings.TARGET_DELIMETER +
+                    this.roomId + strings.TARGET_DELIMETER + strings.NONE;
+        let message = cmd + strings.DELIMETER + target + strings.DELIMETER + payload;
         this.websocket.send(message);
     }
 

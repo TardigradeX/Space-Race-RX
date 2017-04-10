@@ -9,7 +9,8 @@ export const commands = {
 
     LEFTROLL : "left",
     RIGHTROLL : "right",
-    THRUST : "thrust"
+    THRUST : "thrust", 
+    NONE : "none"
 };
 
 

@@ -11,6 +11,7 @@ class Commands(str, Enum):
     LEFTROLL = "left"
     RIGHTROLL = "right"
     THRUST = "thrust"
+    NONE = "none"
 
 class Targets(str, Enum):
     CONTROLLER = 'controller'

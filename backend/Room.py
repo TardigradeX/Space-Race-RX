@@ -20,7 +20,7 @@ class Room(object):
     def addController(self, User):
         """ add controller to list, check if valid """
         if len(self.__controller) < self.__maxPlayer:
-            playerId = Targets.CONTROLLER + str(len(self.__controller) + 1)
+            playerId = str(len(self.__controller) + 1)
 
             self.__controllerMap[User.peer] = playerId
             self.__controller[playerId] = User

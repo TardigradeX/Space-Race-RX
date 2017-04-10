@@ -69,6 +69,5 @@ export default class extends Phaser.State {
         if (this.roomId.length > 0) {
             let text = this.game.add.text(this.game.width / 2, 70, this.roomId);
         }
-
     }
 }

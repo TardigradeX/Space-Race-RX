@@ -34,10 +34,10 @@ def createLogout():
     return(msg)
 
 """ COMMANDS CREATED BY CONTROLLER ONLY """
-def createGameCommand(command, targetType):
-    roomid = dn
-    targetPlayer = dn
-    target = dt.join([targetType, roomid, targetPlayer])
+def createGameCommand(command, targetType, roomid = Defaults.NONE, playerId = Defaults.NONE):
+    roomid = roomid
+    targetPlayer = playerId
+    target = dt.join([targetType, roomid, playerId])
 
     payload = dn
     msg = dd.join([command, target, payload])

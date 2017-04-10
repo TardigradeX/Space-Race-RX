@@ -1,6 +1,10 @@
 from Room import Room
 from User import User
+
+import Commands_util as cutil
 from Commands import Commands, Targets, Defaults
+
+
 
 class RoomService(object):
     def __init__(self):
@@ -47,25 +51,20 @@ class RoomService(object):
             print("User not registered")
             return(False)
 
-        tmp = target.split(Defaults.TARGET_DELIMETER)
-        if len(tmp) == 2:
-            targetType, roomId = tmp
-        elif len(tmp) == 3:
-            targetType, roomId, targetPlayerId = tmp
-        else:
-            raise Exception("Wrong target format")
-
-
+        targetType, roomId = target.split(Defaults.TARGET_DELIMETER)[0:2]
         room = self.__service[roomId]
         if targetType.startswith(Targets.MASTER):
             # send message from player to master
             playerId = room.getPlayerId(sourcepeer)
             print (playerId)
             print("Message from player",sourcepeer, "=" , str(playerId), "to", target)
-            message = Commands.MESSAGE + Defaults.DELIMETER + \
-                      Targets.MASTER + Defaults.TARGET_DELIMETER +\
-                      roomId + Defaults.TARGET_DELIMETER + str(playerId)+Defaults.DELIMETER+payload
-            room.master.client.sendMessage2(message)
+            msg = cutil.createMessage(sourcepeer,\
+                    Targets.MASTER, roomId, str(playerId), payload)
+            # message = Commands.MESSAGE + Defaults.DELIMETER + \
+            #           Targets.MASTER + Defaults.TARGET_DELIMETER +\
+            #           roomId + Defaults.TARGET_DELIMETER + str(playerId)+\
+            #           Defaults.DELIMETER+payload
+            room.master.client.sendMessage2(msg)
 
         elif targetType.startswith(Targets.CONTROLLER):
             # send message from master to target player
@@ -144,17 +143,11 @@ class RoomService(object):
     def listRooms(self):
         return(self.__service)
 
-    def controllCommand(self, sourcepeer, command):
-        cmd, target, payload = command.split("|")
-        targetType, roomid, targetPlayerId = target.split(Defaults.TARGET_DELIMETER)
-
+    def controllSpaceship(self, sourcepeer, command):
+        targetType = Targets.MASTER
+        roomid = self.getUserRoomid(sourcepeer)
         room = self.__service[self.__userlocation[sourcepeer]]
-        print("Room stats:")
-        print(room.roomid)
-        print(room.peer)
-        print("")
-        sourceId = room.getPlayerId(sourcepeer)
-        if targetType == Targets.MASTER:
-            room.master.client.sendMessage2(sourceId + "|" + command)
-        elif targetType == Targets.CONTROLLER:
-            room.getPlayer(targetType).client.sendMessage2(sourceId+"|"+command)
+        targetPlayerId = room.getPlayerId(sourcepeer)
+
+        msg = cutil.createGameCommand(command, targetType,roomid, targetPlayerId)
+        room.master.client.sendMessage2(msg)

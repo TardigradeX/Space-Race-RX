@@ -2,7 +2,7 @@ import sys
 import re
 
 from Commands import Commands, Targets , Defaults, Payloads
-import CommandFactory as cf
+import Commands_util as cutil
 
 from RoomService import RoomService
 from twisted.web.static import File
@@ -47,9 +47,8 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
     def passMessage(self, sourcepeer, target, payload):
         self.roomService.passMessage(sourcepeer, target, payload)
 
-    def controllCommand(self, sourcepeer, cmd):
-        msg = cf.createGameCommand(cmd, Targets.MASTER)
-        self.roomService.controllCommand(sourcepeer, msg)
+    def passControl(self, sourcepeer, cmd):
+        self.roomService.controllSpaceship(sourcepeer, cmd)
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
@@ -70,7 +69,6 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             - <cmd> being defined in Commands.py/Commands.js
             - <target> := <targetType>:<roomid>:<playerId>
             - <payload> any content
-
         """
 
         cmd, target, payload = payload.split(Defaults.DELIMETER)
@@ -81,17 +79,18 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         if cmd == Commands.LOGIN:
             if roomid == Defaults.NONE:
                 newRoomid = self.factory.addRoom(self)
-                self.sendMessage2(cf.createLoginResponse(Targets.MASTER, newRoomid, Targets.MASTER))
+                self.sendMessage2(cutil.createLoginResponse(\
+                                Targets.MASTER, newRoomid, Targets.MASTER))
             else:
                 success, playerId = self.factory.registerController(self, roomid)
                 if not success:
                     self.sendMessage2("Could not sign up to room"+ str(roomid))
                     self.sendClose()
                 else:
-                    self.sendMessage2(cf.createLoginResponse(targetType, roomid,\
-                                        playerId))
+                    self.sendMessage2(cutil.createLoginResponse(targetType, \
+                    roomid, playerId))
                     self.parseMessage(\
-                        cf.createMessage(\
+                        cutil.createMessage(\
                                 self.peer, Targets.MASTER, roomid, \
                                 Defaults.NONE, Payloads.JOINED))
                     print("Controller " + self.peer + " registered to room" + roomid)
@@ -107,15 +106,19 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             pass
 
         elif cmd == Commands.LEFTROLL:
-            self.factory.controllCommand(self.peer, Commands.LEFTROLL)
+            self.factory.passControl(self.peer, Commands.LEFTROLL)
 
         elif cmd == Commands.RIGHTROLL:
-            self.factory.controllCommand(self.peer, Commands.RIGHTROLL)
+            self.factory.passControl(self.peer, Commands.RIGHTROLL)
 
         elif cmd == Commands.THRUST:
-            self.factory.controllCommand(self.peer, Commands.THRUST)
+            self.factory.passControl(self.peer, Commands.THRUST)
+
+        elif cmd == Commands.NONE:
+            self.factory.passControl(self.peer, Commands.NONE)
 
         else:
+            print(payload)
             print("Unknown command - unable to comply")
 
     def onConnect(self, request):
