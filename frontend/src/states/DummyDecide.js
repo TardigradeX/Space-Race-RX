@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { centerGameObjects } from '../utils'
+import {Player} from "../Player";
 
 export default class extends Phaser.State {
 

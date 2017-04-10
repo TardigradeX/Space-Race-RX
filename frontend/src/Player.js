@@ -7,15 +7,15 @@ import {playerStates} from "./commands";
 export class Player {
 
     constructor(id) {
-        this.id = id;
-        this.playerState = playerStates.ALIVE;
+        this._id = id;
+        this._playerState = playerStates.ALIVE;
     }
 
-    id(){
-        return this.id;
+    get id(){
+        return this._id;
     }
 
-    playerState(){
-        return this.playerState;
+    get playerState(){
+        return this._playerState;
     }
 }

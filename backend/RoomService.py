@@ -44,7 +44,7 @@ class RoomService(object):
             print("Message from player"+sourcepeer+"=" + str(playerId) +"to"+target)
             message = Commands.MESSAGE + Defaults.DELIMETER + \
                       Targets.MASTER + Defaults.TARGET_DELIMETER +\
-                      roomId + Defaults.TARGET_DELIMETER + Targets.PLAYER+str(playerId)+Defaults.DELIMETER+payload
+                      roomId + Defaults.TARGET_DELIMETER + str(playerId)+ Defaults.DELIMETER+payload
             room.getMaster().client().sendMessage2(message)
 
         elif targetType.startswith(Targets.CONTROLLER):
