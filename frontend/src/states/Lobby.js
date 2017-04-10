@@ -55,8 +55,7 @@ export default class extends Phaser.State {
             if (cmd == 'message') {
                 if (payload == 'signup') {
                     this.roomId = target.split(TARGET_DELIMETER)[1];
-                    console.log("tHE ID is: " + this.roomId);
-                } else {
+                } else if (payload == 'joined'){
                     let playerId = target.split(TARGET_DELIMETER)[2];
                     this.players.push(new Player(playerId));
                 }

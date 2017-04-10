@@ -1,11 +1,7 @@
 import sys
-import random
 import re
-import enum
 
-from Room import Room
-from User import User
-from Commands import Commands, Targets , Defaults
+from Commands import Commands, Targets , Defaults, Payloads
 import CommandFactory as cf
 
 from RoomService import RoomService
@@ -90,7 +86,7 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
                     self.parseMessage(\
                         cf.createMessage(\
                                 self.peer, Targets.MASTER, roomid, \
-                                Defaults.NONE, "New player"))
+                                Defaults.NONE, Payloads.JOINED))
                     print("Controller " + self.peer + " registered to room" + roomid)
 
         elif cmd == Commands.MESSAGE:
