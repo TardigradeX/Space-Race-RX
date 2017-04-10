@@ -6,9 +6,9 @@ dn = Defaults.NONE
 
 """ COMMANDS TO BE SENT BY ANY """
 def createLogin(targetType, roomid = dn ):
-    targetPlayerId = dn
+    playerId = dn
     payload = dn
-    target = dt.join([targetType, roomid, targetPlayerId])
+    target = dt.join([targetType, roomid, playerId])
     msg = dd.join([Commands.LOGIN, target, payload])
     return(msg)
 
@@ -25,18 +25,18 @@ def createPlayerJoined(roomid, playerId):
     msg = dd.join([Commands.LOGIN, target, payload])
     return(msg)
 
-def createMessage(source, targetType, roomid, targetPlayer, payload):
-    target = dt.join([targetType, roomid, targetPlayer])
+def createMessage(source, targetType, roomid, playerId, payload):
+    target = dt.join([targetType, roomid, playerId])
     msg = dd.join([Commands.MESSAGE, target, payload])
     return(msg)
 
-def createLogout():
+def createLogout(roomid, playerId):
     payload = dn
-    targetType = Targets.SERVER
-    roomid = dn
-    targetPlayer = dn
+    targetType = Targets.MASTER
+    roomid = roomid
+    targetPlayer = playerId
     payload = dn
-    target = dt.join([targetType, roomid, targetPlayer])
+    target = dt.join([targetType, roomid, playerId])
     msg = dd.join([Commands.LOGOUT, target, payload])
     return(msg)
 

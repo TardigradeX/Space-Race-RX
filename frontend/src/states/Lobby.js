@@ -6,7 +6,7 @@ import {Player} from "../Player";
 export default class extends Phaser.State {
 
     init () {
-      this.xbutton = 80;
+      this.xbutton = 20;
       this.ybutton = 120;
       this.yoffset = 60;
       this.pbuttons = [];
@@ -51,23 +51,53 @@ export default class extends Phaser.State {
     }
 
     create () {
-        this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 200, 'button', this.startGame, this, 2, 1, 0);
+        this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 120, 'button', this.startGame, this, 2, 1, 0);
     }
 
     startGame() {
+      console.log("Master button pushed");
         this.state.start('Game', false, false, this.websocket, this.roomId, this.players);
-
     }
 
     addPlayer(playerId){
-      var x,y, offset;
+      var x, y, offset, pbutton, text1;
       this.players.push(new Player(playerId));
-      this.playerReady.push(0)
-      x = this.xbutton
-      y = this.ybutton
-      console.log("New Player - adding button");
-      pbutton = this.game.add.button(x, y + offset*this.players.length, 'button')
+      this.playerReady.push(0);
+      x = this.xbutton;
+      y = this.ybutton;
+      offset = this.yoffset;
+      console.log("New Player - adding button", this.playerReady.length);
 
+      pbutton = this.game.add.button(x, y + (offset*this.playerReady.length), 'button');
+      text1 = this.game.add.text(x + 40, y + (offset*this.playerReady.length), "Player"+ this.players.length);
+      pbutton.text = text1
+      var i,k = undefined;
+      for(i = this.pbuttons.length - 1; i > -1; i--){
+        if(this.pbuttons[i] == undefined){
+          k = i;
+        }
+      }
+      if (k == undefined){
+        this.pbuttons.push(pbutton)
+      } else {
+        this.pbuttons[k] = pbutton
+      }
+      console.log(this.pbuttons);
+    }
+
+    removePlayer(playerId){
+      console.log("Removing player", playerId);
+      console.log(this.pbuttons);
+      var i = parseInt(playerId) - 1
+
+      if( this.pbuttons[i] == undefined){
+        console.log("Player", playerId, " undefined");
+        return(NONE);
+      }
+      let cbutton = this.pbuttons[i]
+      cbutton.text.destroy();
+      cbutton.destroy();
+      this.pbuttons[i] = undefined;
     }
 
     parse(message){
@@ -98,6 +128,11 @@ export default class extends Phaser.State {
             this.addPlayer(playerId)
           }
         }
+        if (cmd == commands.LOGOUT){
+          let playerId = target.split(TARGET_DELIMETER)[2];
+          this.removePlayer(playerId)
+        }
+
         if (cmd == commands.THRUST){
           let playerId = target.split(TARGET_DELIMETER)[2];
           this.playerReady[parseInt(playerId) - 1] = 1
@@ -128,7 +163,7 @@ export default class extends Phaser.State {
 
     update () {
         if (this.roomId.length > 0) {
-            let text = this.game.add.text(this.game.width / 2, 70, this.roomId);
+            let text = this.game.add.text(this.game.width / 3, 20, "Welcome to Room " + this.roomId);
         }
     }
 }

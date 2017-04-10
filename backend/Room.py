@@ -50,3 +50,4 @@ class Room(object):
     def deleteController(self, peer):
         playerid = self.__controllerMap.pop(peer)
         self.__controller.pop(playerid)
+        return(playerid)

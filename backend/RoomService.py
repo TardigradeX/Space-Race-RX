@@ -35,7 +35,10 @@ class RoomService(object):
 
         success = False
         roomid = self.__userlocation.pop(peer)
-        self.__service[roomid].deleteController(peer)
+        playerId = self.__service[roomid].deleteController(peer)
+
+        msg = cutil.createLogout(roomid, playerId)
+        self.__service[roomid].master.client.sendMessage2(msg)
         success = True
         return(success, None)
 
