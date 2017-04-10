@@ -40,8 +40,11 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
         case1: client is room, sendClose for controllers, remove room
         case2: client is controller, remove controller
         """
-        print(self.roomService.listRooms())
         success, userList = self.roomService.deleteClient(peer)
+        rooms = self.roomService.listRooms()
+        print(rooms)
+        for key in rooms:
+            print(key, rooms[key].getAllUser())
         print("Unregistered", peer + ": worked", success,", userList:", userList)
 
     def passMessage(self, sourcepeer, target, payload):

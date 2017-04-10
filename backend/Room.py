@@ -17,14 +17,22 @@ class Room(object):
         self.__controller = {}      # <playerId>:<User>, playerId: player1,...,n, n <= maxPlayer
         self.__controllerMap = {}   # <peer>:<playerId>
 
+
     def addController(self, User):
+        def determineId(keys):
+            i = 1;
+            while i in keys:
+                i += 1
+            return(str(i))
+
         """ add controller to list, check if valid """
         if len(self.__controller) < self.__maxPlayer:
-            playerId = str(len(self.__controller) + 1)
+            keys1 = [int(x) for x in list(self.__controller.keys())]
+            playerId = determineId(keys1)
 
             self.__controllerMap[User.peer] = playerId
             self.__controller[playerId] = User
-
+            print("Added controller", playerId)
             return(True)
 
         return False
