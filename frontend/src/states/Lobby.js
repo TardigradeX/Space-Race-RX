@@ -60,27 +60,33 @@ export default class extends Phaser.State {
     }
 
     addPlayer(playerId){
+      function findFreeSlot(player){
+        return(player === 0);
+      }
+
+      console.log(this.pbuttons);
+      var i, k;
+      i = this.pbuttons.findIndex(findFreeSlot)
+      console.log("k =", k);
+      if(i === -1){ i = this.pbuttons.length }
+      k = i + 1
+
       var x, y, offset, pbutton, text1;
       this.players.push(new Player(playerId));
       this.playerReady.push(0);
       x = this.xbutton;
       y = this.ybutton;
       offset = this.yoffset;
-      console.log("New Player - adding button", this.playerReady.length);
 
-      pbutton = this.game.add.button(x, y + (offset*this.playerReady.length), 'button');
-      text1 = this.game.add.text(x + 40, y + (offset*this.playerReady.length), "Player"+ this.players.length);
+      pbutton = this.game.add.button(x, y + (offset*k), 'button');
+      text1 = this.game.add.text(x + 40, y + (offset*k), "Player"+ (k));
       pbutton.text = text1
-      var i,k = undefined;
-      for(i = this.pbuttons.length - 1; i > -1; i--){
-        if(this.pbuttons[i] == undefined){
-          k = i;
-        }
-      }
-      if (k == undefined){
+      console.log("New Player - adding button", k);
+
+      if (k == this.pbuttons.length){
         this.pbuttons.push(pbutton)
       } else {
-        this.pbuttons[k] = pbutton
+        this.pbuttons[i] = pbutton
       }
       console.log(this.pbuttons);
     }
@@ -90,14 +96,15 @@ export default class extends Phaser.State {
       console.log(this.pbuttons);
       var i = parseInt(playerId) - 1
 
-      if( this.pbuttons[i] == undefined){
+      if( this.pbuttons[i] === 0){
         console.log("Player", playerId, " undefined");
         return(NONE);
       }
       let cbutton = this.pbuttons[i]
       cbutton.text.destroy();
       cbutton.destroy();
-      this.pbuttons[i] = undefined;
+      this.pbuttons[i] = 0;
+      console.log("After removal:", this.pbuttons);
     }
 
     parse(message){
