@@ -1,11 +1,17 @@
 import Phaser from 'phaser'
 import config from '../config'
+
+import VisualTimer from '../../timerBar/VisualTimer/VisualTimer.js'
+
 import {DELIMETER, targets, commands, payloads, NONE, NEW, TARGET_DELIMETER} from "../commands";
 import {Player} from "../Player";
 
 export default class extends Phaser.State {
 
+
     init () {
+      this.sinceAllReady = 0;
+
       this.xbutton = 20;
       this.ybutton = 120;
       this.yoffset = 60;
@@ -19,7 +25,10 @@ export default class extends Phaser.State {
 
     preload () {
 
+      game.load.spritesheet('timer', './timerBar/VisualTimer/assets/img/timer.png', 150, 20);
+
       this.load.spritesheet('readyState', 'assets/images/sign-lobby_spriteSheet.png' ,64,64, 2);
+
       this.load.image('button', 'assets/images/small_button.png');
       this.websocket = new WebSocket(config.wsServerAddress);
 
@@ -53,19 +62,16 @@ export default class extends Phaser.State {
     }
 
     create () {
-  //     var mummy = game.add.sprite(300, 200, 'mummy');
-   //
-  //  //  Here we add a new animation called 'walk'
-  //  //  Because we didn't give any other parameters it's going to make an animation from all available frames in the 'mummy' sprite sheet
-  //  var walk = mummy.animations.add('walk');
-   //
-  //  //  And this starts the animation playing by using its key ("walk")
-  //  //  30 is the frame rate (30fps)
-  //  //  true means it will loop when it finishes
-  //  mummy.animations.play('walk', 30, true);
+
+      this.indicator = new VisualTimer({
+					game: this.game,
+					x: 123,
+					y: 456,
+					seconds: 5,
+					onComplete: function() { console.log('>>> Go Go Go') }
+				});
+
       this.readyState = this.game.add.sprite(300, 400,'readyState');
-      // readyState.inputEnabled=true;
-      // readyState.events.onInputDown.add(this.readyStateListener,this);
 
       this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 120, 'button', this.startGame, this, 2, 1, 0);
 
@@ -80,15 +86,18 @@ export default class extends Phaser.State {
       var n = playerStates.reduce(function(pv, cv) { return pv + cv; }, 0);
       if (n === playerStates.length){
           this.readyState.frame = 1;
+          this.indicator.start();
+
       } else {
           this.readyState.frame = 0;
+          this.indicator.stop();
+          this.indicator.reset();
       }
       return(this.readyState.frame)
     }
 
     startGame() {
-      console.log("Master button pushed");
-        this.state.start('Game', false, false, this.websocket, this.roomId, this.players);
+      this.state.start('Game', false, false, this.websocket, this.roomId, this.players);
     }
 
     addPlayer(playerId){
@@ -187,6 +196,9 @@ export default class extends Phaser.State {
     update () {
         if (this.roomId.length > 0) {
             let text = this.game.add.text(this.game.width / 3, 20, "Welcome to Room " + this.roomId);
+        }
+        if(this.indicator.hasFinished){
+          this.startGame()
         }
     }
 }
