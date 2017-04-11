@@ -10,12 +10,11 @@ export default class extends Phaser.State {
 
 
     init () {
-      this.sinceAllReady = 0;
 
       this.xbutton = 20;
       this.ybutton = 120;
-      this.yoffset = 60;
-      this.pbuttons = [];
+      this.yoffset = 64 + 10;
+      this.psigns = [];
       this.pReady = [];
 
       this.players = [];
@@ -27,7 +26,7 @@ export default class extends Phaser.State {
 
       game.load.spritesheet('timer', './timerBar/VisualTimer/assets/img/timer.png', 150, 20);
 
-      this.load.spritesheet('readyState', 'assets/images/sign-lobby_spriteSheet.png' ,64,64, 2);
+      this.load.spritesheet('readyState', 'assets/images/sign-lobby_spriteSheet.png',64 ,64, 2);
 
       this.load.image('button', 'assets/images/small_button.png');
       this.websocket = new WebSocket(config.wsServerAddress);
@@ -65,35 +64,39 @@ export default class extends Phaser.State {
 
       this.indicator = new VisualTimer({
 					game: this.game,
-					x: 123,
-					y: 456,
+					x: this.game.world.centerX - 95 - 45,
+					y: 200,
 					seconds: 5,
 					onComplete: function() { console.log('>>> Go Go Go') }
 				});
+        this.game.add.text(this.game.world.centerX - 95 - 60, 230, "until game start");
 
-      this.readyState = this.game.add.sprite(300, 400,'readyState');
+      // this.readyState = this.game.add.sprite(300, 400,'readyState');
 
       this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 120, 'button', this.startGame, this, 2, 1, 0);
-
     }
 
-    checkReady(playerStates){
+    allReady(playerStates){
       if(playerStates.length === 0){
-        this.readyState.frame = 0;
-        return(0)
+        return(false)
       }
-
       var n = playerStates.reduce(function(pv, cv) { return pv + cv; }, 0);
       if (n === playerStates.length){
-          this.readyState.frame = 1;
           this.indicator.start();
-
+          return(true);
       } else {
-          this.readyState.frame = 0;
           this.indicator.stop();
           this.indicator.reset();
+          return(false);
       }
-      return(this.readyState.frame)
+    }
+
+    showReadyState(player, psign){
+      if (player === 1){
+        psign.frame = 1;
+      } else {
+        psign.frame = 0;
+      }
     }
 
     startGame() {
@@ -102,39 +105,39 @@ export default class extends Phaser.State {
 
     addPlayer(playerId){
       var i, k;
-      i = this.pbuttons.findIndex(function(player){return(player === 0);})
-      if(i === -1){ i = this.pbuttons.length }
+      i = this.psigns.findIndex(function(player){return(player === 0);})
+      if(i === -1){ i = this.psigns.length }
       k = i + 1
 
-      var x, y, offset, pbutton, text1;
+      var x, y, offset, psign, text1;
       this.players.push(new Player(playerId));
       this.playerReady.push(0);
       x = this.xbutton;
       y = this.ybutton;
       offset = this.yoffset;
 
-      pbutton = this.game.add.button(x, y + (offset*k), 'button');
-      text1 = this.game.add.text(x + 40, y + (offset*k), "Player"+ (k));
-      pbutton.text = text1
+      // pbutton = this.game.add.button(x, y + (offset*k), 'button');
+      psign = this.game.add.sprite(x, y + (offset*k) , 'readyState', 0 )
+      text1 = this.game.add.text(x + 64 + 5, y + (offset*k) + 18, "Player"+ (k));
+      psign.text = text1
 
-      if (k == this.pbuttons.length){
-        this.pbuttons.push(pbutton)
+      if (k == this.psigns.length){
+        this.psigns.push(psign)
       } else {
-        this.pbuttons[i] = pbutton
+        this.psigns[i] = psign
       }
     }
 
     removePlayer(playerId){
       var i = parseInt(playerId) - 1
 
-      if( this.pbuttons[i] === 0){
+      if( this.psigns[i] === 0) {
         return(NONE);
       }
-      let cbutton = this.pbuttons[i]
+      let cbutton = this.psigns[i]
       cbutton.text.destroy();
       cbutton.destroy();
-      this.pbuttons[i] = 0;
-
+      this.psigns[i] = 0;
     }
 
     parse(message){
@@ -189,8 +192,13 @@ export default class extends Phaser.State {
           this.playerReady[parseInt(playerId) - 1] = 0
         }
 
-        this.allReady = this.checkReady(this.playerReady);
-        console.log('All ready:', this.allReady);
+        console.log(this.playerReady);
+        console.log(this.psigns);
+        for(var i = 0; i < this.playerReady.length; i++){
+          this.showReadyState(this.playerReady[i], this.psigns[i])
+        }
+        this.allReadyState = this.allReady(this.playerReady);
+        console.log('All ready:', this.allReadyState);
     }
 
     update () {

@@ -81,8 +81,10 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         if cmd == Commands.LOGIN:
             if roomid == Defaults.NONE:
                 newRoomid = self.factory.addRoom(self)
-                self.sendMessage2(cutil.createLoginResponse(\
-                                Targets.MASTER, newRoomid, Defaults.NONE))
+                msg = cutil.createLoginResponse(\
+                                Targets.MASTER, newRoomid, Defaults.NONE)
+                print(msg)
+                self.sendMessage2(msg)
             else:
                 success, playerId = self.factory.registerController(self, roomid)
                 if not success:
