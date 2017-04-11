@@ -10,6 +10,7 @@ export default class extends Phaser.State {
       this.ybutton = 120;
       this.yoffset = 60;
       this.pbuttons = [];
+      this.pReady = [];
 
       this.players = [];
       this.playerReady = [];
@@ -18,6 +19,7 @@ export default class extends Phaser.State {
 
     preload () {
 
+      this.load.spritesheet('readyState', 'assets/images/sign-lobby_spriteSheet.png' ,64,64, 2);
       this.load.image('button', 'assets/images/small_button.png');
       this.websocket = new WebSocket(config.wsServerAddress);
 
@@ -51,7 +53,37 @@ export default class extends Phaser.State {
     }
 
     create () {
-        this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 120, 'button', this.startGame, this, 2, 1, 0);
+  //     var mummy = game.add.sprite(300, 200, 'mummy');
+   //
+  //  //  Here we add a new animation called 'walk'
+  //  //  Because we didn't give any other parameters it's going to make an animation from all available frames in the 'mummy' sprite sheet
+  //  var walk = mummy.animations.add('walk');
+   //
+  //  //  And this starts the animation playing by using its key ("walk")
+  //  //  30 is the frame rate (30fps)
+  //  //  true means it will loop when it finishes
+  //  mummy.animations.play('walk', 30, true);
+      this.readyState = this.game.add.sprite(300, 400,'readyState');
+      // readyState.inputEnabled=true;
+      // readyState.events.onInputDown.add(this.readyStateListener,this);
+
+      this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 120, 'button', this.startGame, this, 2, 1, 0);
+
+    }
+
+    checkReady(playerStates){
+      if(playerStates.length === 0){
+        this.readyState.frame = 0;
+        return(0)
+      }
+
+      var n = playerStates.reduce(function(pv, cv) { return pv + cv; }, 0);
+      if (n === playerStates.length){
+          this.readyState.frame = 1;
+      } else {
+          this.readyState.frame = 0;
+      }
+      return(this.readyState.frame)
     }
 
     startGame() {
@@ -60,14 +92,8 @@ export default class extends Phaser.State {
     }
 
     addPlayer(playerId){
-      function findFreeSlot(player){
-        return(player === 0);
-      }
-
-      console.log(this.pbuttons);
       var i, k;
-      i = this.pbuttons.findIndex(findFreeSlot)
-      console.log("k =", k);
+      i = this.pbuttons.findIndex(function(player){return(player === 0);})
       if(i === -1){ i = this.pbuttons.length }
       k = i + 1
 
@@ -81,30 +107,25 @@ export default class extends Phaser.State {
       pbutton = this.game.add.button(x, y + (offset*k), 'button');
       text1 = this.game.add.text(x + 40, y + (offset*k), "Player"+ (k));
       pbutton.text = text1
-      console.log("New Player - adding button", k);
 
       if (k == this.pbuttons.length){
         this.pbuttons.push(pbutton)
       } else {
         this.pbuttons[i] = pbutton
       }
-      console.log(this.pbuttons);
     }
 
     removePlayer(playerId){
-      console.log("Removing player", playerId);
-      console.log(this.pbuttons);
       var i = parseInt(playerId) - 1
 
       if( this.pbuttons[i] === 0){
-        console.log("Player", playerId, " undefined");
         return(NONE);
       }
       let cbutton = this.pbuttons[i]
       cbutton.text.destroy();
       cbutton.destroy();
       this.pbuttons[i] = 0;
-      console.log("After removal:", this.pbuttons);
+
     }
 
     parse(message){
@@ -159,13 +180,8 @@ export default class extends Phaser.State {
           this.playerReady[parseInt(playerId) - 1] = 0
         }
 
-        if (cmd == commands.THRUST |
-            cmd == commands.LEFTROLL |
-            cmd == commands.RIGHTROLL |
-            cmd == commands.NONE) {
-              let playerId = target.split(TARGET_DELIMETER)[2];
-              console.log(parseInt(playerId) -1, this.playerReady);
-            }
+        this.allReady = this.checkReady(this.playerReady);
+        console.log('All ready:', this.allReady);
     }
 
     update () {
