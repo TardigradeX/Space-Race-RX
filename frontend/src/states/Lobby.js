@@ -92,10 +92,15 @@ export default class extends Phaser.State {
     }
 
     showReadyState(player, psign){
+      if(player === null){
+        return(null)
+      }
       if (player === 1){
         psign.frame = 1;
+        return(true)
       } else {
         psign.frame = 0;
+        return(false)
       }
     }
 
@@ -105,13 +110,11 @@ export default class extends Phaser.State {
 
     addPlayer(playerId){
       var i, k;
-      i = this.psigns.findIndex(function(player){return(player === 0);})
+      i = this.psigns.findIndex(function(player){return(player === null);})
       if(i === -1){ i = this.psigns.length }
       k = i + 1
 
       var x, y, offset, psign, text1;
-      this.players.push(new Player(playerId));
-      this.playerReady.push(0);
       x = this.xbutton;
       y = this.ybutton;
       offset = this.yoffset;
@@ -122,22 +125,28 @@ export default class extends Phaser.State {
       psign.text = text1
 
       if (k == this.psigns.length){
+        this.players.push(new Player(playerId));
         this.psigns.push(psign)
+        this.playerReady.push(0);
+
       } else {
         this.psigns[i] = psign
+        this.players[i] = new Player(playerId);
+        this.playerReady[i] = 0;
       }
     }
 
     removePlayer(playerId){
       var i = parseInt(playerId) - 1
 
-      if( this.psigns[i] === 0) {
+      if( this.psigns[i] === null) {
         return(NONE);
       }
       let cbutton = this.psigns[i]
       cbutton.text.destroy();
       cbutton.destroy();
-      this.psigns[i] = 0;
+      this.psigns[i] = null;
+      this.playerReady[i] = null;
     }
 
     parse(message){
@@ -195,7 +204,9 @@ export default class extends Phaser.State {
         console.log(this.playerReady);
         console.log(this.psigns);
         for(var i = 0; i < this.playerReady.length; i++){
-          this.showReadyState(this.playerReady[i], this.psigns[i])
+          if(this.playerReady !== null){
+            this.showReadyState(this.playerReady[i], this.psigns[i])
+          }
         }
         this.allReadyState = this.allReady(this.playerReady);
         console.log('All ready:', this.allReadyState);
