@@ -124,7 +124,7 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         elif cmd == Commands.REQUEST:
             res = self.factory.parseRequest(self.peer, targetType, roomid, playerId, payload)
             msg = cutil.createAnswer(Defaults.NONE, Defaults.NONE, Defaults.NONE, Payloads.LISTROOMS)
-            msg = msg + Defaults.TARGET_DELIMETER + json.dumps(res)
+            msg = msg + Defaults.TARGET_DELIMETER + res
             print("Sending message:\n", msg)
             self.sendMessage2(msg)
 

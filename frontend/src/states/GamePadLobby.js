@@ -68,7 +68,7 @@ export default class extends Phaser.State {
         if(payload.startsWith(payloads.LISTROOMS)){
           payload = payload.replace(payloads.LISTROOMS + TARGET_DELIMETER, '')
           console.log("payload input:", payload);
-          console.log("payload typeof:", typeof payload);
+          console.log("JSON typeof:", typeof payload);
 
           let obj = JSON.parse(payload);
           console.log("JSON input:", obj);
@@ -79,7 +79,7 @@ export default class extends Phaser.State {
         }
       }
 
-      this.state.start('GamePad', false, false, this.websocket, this.roomId);
+      // this.state.start('GamePad', false, false, this.websocket, this.roomId);
     }
 
     sendRoomRequest() {
