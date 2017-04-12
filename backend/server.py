@@ -59,10 +59,12 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def parseRequest(self, source, targetType, roomid, playerId, payload):
         """ should always return a json file """
+        res = None
         print(source, 'requested', payload, 'from', targetType, 'at room', roomid, playerId)
         if payload in self.requestopt:
             res = self.requestopt[payload]()
-        return(json.dumps(res))
+            res = json.dumps(res, ensure_ascii = False)
+        return(res)
 
     def listRooms(self):
         """returns list of roomid + #players"""
@@ -121,8 +123,10 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
         elif cmd == Commands.REQUEST:
             res = self.factory.parseRequest(self.peer, targetType, roomid, playerId, payload)
-            print(res)
-            self.sendMessage2(res)
+            msg = cutil.createAnswer(Defaults.NONE, Defaults.NONE, Defaults.NONE, Payloads.LISTROOMS)
+            msg = msg + Defaults.TARGET_DELIMETER + json.dumps(res)
+            print("Sending message:\n", msg)
+            self.sendMessage2(msg)
 
         elif cmd == Commands.LOGOUT:
             print("[not implemented] " + self.peer + "sent a logout ")

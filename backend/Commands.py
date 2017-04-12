@@ -14,6 +14,7 @@ class Commands(str, Enum):
     NONE = "none"
 
     REQUEST = 'request'
+    ANSWER = 'answer'
 
     READY = 'ready'
 

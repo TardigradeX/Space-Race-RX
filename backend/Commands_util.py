@@ -25,6 +25,11 @@ def createPlayerJoined(roomid, playerId):
     msg = dd.join([Commands.LOGIN, target, payload])
     return(msg)
 
+def createAnswer(targetType, roomid, playerId, payload):
+    target = dt.join([targetType, roomid, playerId])
+    msg = dd.join([Commands.ANSWER, target, payload])
+    return(msg)
+    
 def createMessage(source, targetType, roomid, playerId, payload):
     target = dt.join([targetType, roomid, playerId])
     msg = dd.join([Commands.MESSAGE, target, payload])

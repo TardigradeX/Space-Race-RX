@@ -13,6 +13,7 @@ export const commands = {
     NONE : "none",
 
     REQUEST : 'request',
+    ANSWER : 'answer',
 
     READY : 'ready'
 };

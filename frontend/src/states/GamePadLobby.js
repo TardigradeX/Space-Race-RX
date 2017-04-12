@@ -7,6 +7,7 @@ export default class extends Phaser.State {
         this.roomId = "";
         this.connected = false;
         this.connectedMessage = "";
+        this.listofRooms = null;
     }
 
     preload() {
@@ -47,7 +48,10 @@ export default class extends Phaser.State {
             this.keyPress(this.game.input.keyboard.event.keyCode)
         }.bind(this);
     }
+
     parseMessage(message){
+
+      console.log(message);
       let mySplit = message.split(DELIMETER);
 
       if (mySplit.length != 3){
@@ -58,7 +62,22 @@ export default class extends Phaser.State {
       let cmd = mySplit[0];
       let target = mySplit[1];
       let payload = mySplit[2];
+
       console.log("Command:", cmd);
+      if (cmd === commands.ANSWER){
+        if(payload.startsWith(payloads.LISTROOMS)){
+          payload = payload.replace(payloads.LISTROOMS + TARGET_DELIMETER, '')
+          console.log("payload input:", payload);
+          console.log("payload typeof:", typeof payload);
+
+          let obj = JSON.parse(payload);
+          console.log("JSON input:", obj);
+          console.log("JSON typeof:", typeof obj);
+
+          this.listofRooms = obj
+          this.showAvailableRooms();
+        }
+      }
 
       this.state.start('GamePad', false, false, this.websocket, this.roomId);
     }
@@ -70,8 +89,29 @@ export default class extends Phaser.State {
     }
 
     showAvailableRooms(){
+      let bmtext;
+      let i = 0;
+      let x = 10;
+      let y = 40;
+      let offset = 15;
 
-
+      let rooms = this.listofRooms;
+      console.log(rooms);
+      for(var key in rooms){
+          if (rooms.hasOwnProperty(key)){
+              var value=rooms[key];
+              // work with key and value
+              console.log(value);
+          }
+      }
+      /**
+      for(let key1 in rooms){
+        console.log("key =", key1);
+        // bmtext = this.game.add.bitmapText(x, y + (offset*i), 'stupid_font', key1, offset - 3)
+        i++;
+      }
+      **/
+      console.log("i =",i);
     }
 
     keyPress(keyCode) {
