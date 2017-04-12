@@ -70,10 +70,6 @@ export default class extends Phaser.State {
 					onComplete: function() { console.log('>>> Go Go Go') }
 				});
         this.game.add.text(this.game.world.centerX - 95 - 60, 230, "until game start");
-
-      // this.readyState = this.game.add.sprite(300, 400,'readyState');
-
-      this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 120, 'button', this.startGame, this, 2, 1, 0);
     }
 
     allReady(playerStates){
@@ -105,7 +101,7 @@ export default class extends Phaser.State {
     }
 
     startGame() {
-      this.state.start('Game', false, false, this.websocket, this.roomId, this.players);
+      this.state.start('Game', true, false, this.websocket, this.roomId, this.players);
     }
 
     addPlayer(playerId){
@@ -128,7 +124,6 @@ export default class extends Phaser.State {
         this.players.push(new Player(playerId));
         this.psigns.push(psign)
         this.playerReady.push(0);
-
       } else {
         this.psigns[i] = psign
         this.players[i] = new Player(playerId);
