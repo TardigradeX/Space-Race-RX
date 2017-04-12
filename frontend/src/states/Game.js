@@ -1,7 +1,7 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
-import {DELIMETER, TARGET_DELIMETER} from "../commands";
+import {commands, DELIMETER, TARGET_DELIMETER} from "../commands";
 
 export default class extends Phaser.State {
   init (websocket, roomId, players) {
@@ -30,6 +30,22 @@ export default class extends Phaser.State {
             if (cmd == 'message') {
                 let playerId = target.split(TARGET_DELIMETER)[2];
                 this.spaceShips.get(playerId).movement = payload;
+            }
+            if (cmd == commands.LEFTROLL){
+              let playerId = target.split(TARGET_DELIMETER)[2];
+              this.spaceShips.get(playerId).movement = cmd;
+            }
+            if (cmd == commands.RIGHTROLL){
+              let playerId = target.split(TARGET_DELIMETER)[2];
+              this.spaceShips.get(playerId).movement = cmd;
+            }
+            if (cmd == commands.THRUST){
+              let playerId = target.split(TARGET_DELIMETER)[2];
+              this.spaceShips.get(playerId).movement = cmd;
+            }
+            if (cmd == commands.NONE){
+              let playerId = target.split(TARGET_DELIMETER)[2];
+              this.spaceShips.get(playerId).movement = cmd;
             }
         }
     }
