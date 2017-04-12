@@ -8,6 +8,8 @@ export default class extends Phaser.State {
         this.connected = false;
         this.connectedMessage = "";
         this.listofRooms = null;
+        this.bmtextList = [];
+        this.roomSelected = null;
     }
 
     preload() {
@@ -50,7 +52,6 @@ export default class extends Phaser.State {
     }
 
     parseMessage(message){
-
       console.log(message);
       let mySplit = message.split(DELIMETER);
 
@@ -78,7 +79,11 @@ export default class extends Phaser.State {
           this.showAvailableRooms();
         }
       }
-
+      if (cmd === commands.LOGIN){
+        if(payload === payloads.signup){
+          this.state.start('GamePad', false, false, this.websocket, this.roomId);
+        }
+      }
       // this.state.start('GamePad', false, false, this.websocket, this.roomId);
     }
 
@@ -90,28 +95,30 @@ export default class extends Phaser.State {
 
     showAvailableRooms(){
       let bmtext;
-      let i = 0;
+      let i = 1;
       let x = 10;
       let y = 40;
-      let offset = 15;
+      let offset = 44;
 
       let rooms = this.listofRooms;
-      console.log(rooms);
-      for(var key in rooms){
-          if (rooms.hasOwnProperty(key)){
-              var value=rooms[key];
-              // work with key and value
-              console.log(value);
-          }
-      }
-      /**
       for(let key1 in rooms){
         console.log("key =", key1);
-        // bmtext = this.game.add.bitmapText(x, y + (offset*i), 'stupid_font', key1, offset - 3)
+        console.log('Adding text to:', x,y+(offset*i));
+        bmtext = this.game.add.bitmapText(x, y + (offset*i) + 10, 'desyrel1', key1, offset);
+        bmtext.inputEnabled = true;
+        bmtext.useHandCursor = true;
+        bmtext.roomid = key1
+        bmtext.events.onInputDown.add(this.setRoomid, this)
+
+        this.bmtextList.push(bmtext);
+        bmtext = null;
         i++;
       }
-      **/
-      console.log("i =",i);
+    }
+
+    setRoomid(item){
+      this.roomId = item.roomid;
+      this.registerPad();
     }
 
     keyPress(keyCode) {
@@ -129,6 +136,8 @@ export default class extends Phaser.State {
       targets.SERVER + TARGET_DELIMETER + this.roomId + TARGET_DELIMETER + NONE + DELIMETER +
       NONE
       this.websocket.send(msg);
+
+      this.state.start('GamePad', false, false, this.websocket, this.roomId);
     }
 
     update() {

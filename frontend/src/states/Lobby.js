@@ -10,7 +10,6 @@ export default class extends Phaser.State {
 
 
     init () {
-
       this.xbutton = 20;
       this.ybutton = 120;
       this.yoffset = 64 + 10;
