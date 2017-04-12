@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import config from '../config'
 
-import VisualTimer from '../../timerBar/VisualTimer/VisualTimer.js'
+import VisualTimer from '../vendor/VisualTimer.js'
 
 import {DELIMETER, targets, commands, payloads, NONE, NEW, TARGET_DELIMETER} from "../commands";
 import {Player} from "../Player";
@@ -24,7 +24,7 @@ export default class extends Phaser.State {
 
     preload () {
 
-      game.load.spritesheet('timer', './timerBar/VisualTimer/assets/img/timer.png', 150, 20);
+      game.load.spritesheet('timer', './assets/images/timer.png', 150, 20);
 
       this.load.spritesheet('readyState', 'assets/images/sign-lobby_spriteSheet.png',64 ,64, 2);
 

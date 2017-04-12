@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import config from '../config'
-import {commands, targets, DELIMETER, NONE, TARGET_DELIMETER} from '../commands'
+import {commands, targets, payloads, DELIMETER, NONE, TARGET_DELIMETER} from '../commands'
 
 export default class extends Phaser.State {
     init() {
@@ -16,6 +16,7 @@ export default class extends Phaser.State {
         this.websocket.onopen = function () {
             console.log("OPENED SOCKET");
             this.connected = true;
+            this.sendRoomRequest();
         }.bind(this);
 
         // Log errors
@@ -30,7 +31,7 @@ export default class extends Phaser.State {
 
         this.websocket.onmessage = function (message) {
           console.log(message.data);
-            this.state.start('GamePad', false, false, this.websocket, this.roomId);
+          this.parseMessage(message.data);
         }.bind(this);
 
         this.websocket.onclose = function(close){
@@ -45,22 +46,33 @@ export default class extends Phaser.State {
         this.game.input.keyboard.onDownCallback = function() {
             this.keyPress(this.game.input.keyboard.event.keyCode)
         }.bind(this);
+    }
+    parseMessage(message){
+      let mySplit = message.split(DELIMETER);
 
-        // this.sendRoomId = this.game.add.button(0, 0, 'button', null, null, 0, 1, 0, 1);
-        // this.sendRoomId.events.onInputDown.add(function () {
-        //     this.registerPad();
-        // }, this);
-        //
-        // this.closeCon = this.game.add.button(0, 200, 'button', null, null, 0, 1, 0, 1);
-        // this.closeCon.events.onInputDown.add(function () {
-        //     this.endSession();
-        // }, this);
+      if (mySplit.length != 3){
+        console.log("Not a command, ignore");
+        return(NONE)
+      }
+
+      let cmd = mySplit[0];
+      let target = mySplit[1];
+      let payload = mySplit[2];
+      console.log("Command:", cmd);
+
+      this.state.start('GamePad', false, false, this.websocket, this.roomId);
     }
 
-    // endSession(){
-    //   this.websocket.close()
-    //   this.state.start('DummyDecide')
-    // }
+    sendRoomRequest() {
+      let target = targets.MASTER + TARGET_DELIMETER + NONE + TARGET_DELIMETER + NONE;
+      let msg = commands.REQUEST + DELIMETER + target + DELIMETER + payloads.LISTROOMS;
+      this.websocket.send(msg);
+    }
+
+    showAvailableRooms(){
+
+
+    }
 
     keyPress(keyCode) {
         if (keyCode == Phaser.KeyCode.ENTER) {

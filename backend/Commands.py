@@ -13,6 +13,8 @@ class Commands(str, Enum):
     THRUST = "thrust"
     NONE = "none"
 
+    REQUEST = 'request'
+
     READY = 'ready'
 
 class Targets(str, Enum):
@@ -34,3 +36,5 @@ class Payloads(str, Enum):
     JOINED = "joined"
     SIGNUP = 'signup'
     FAILED = 'failed'
+
+    LISTROOMS = 'listRooms'

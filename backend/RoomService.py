@@ -116,6 +116,12 @@ class RoomService(object):
         return(success, userList)
 
     def listRooms(self):
+        res = {}
+        for k in self.__service:
+            res[k] = len(self.__service[k].getPlayers())
+        return(res)
+
+    def listRoomObjects(self):
         return(self.__service)
 
     def controllSpaceship(self, sourcepeer, command):

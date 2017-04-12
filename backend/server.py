@@ -1,5 +1,6 @@
 import sys
 import re
+import json
 
 from Commands import Commands, Targets , Defaults, Payloads
 import Commands_util as cutil
@@ -19,6 +20,9 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def __init__(self, *args, **kwargs):
         super(SpaceRaceRXFactory, self).__init__(*args, **kwargs)
+
+        self.requestopt = {}
+        self.requestopt['listRooms'] = self.listRooms
 
         self.roomService = RoomService()
 
@@ -41,7 +45,7 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
         case2: client is controller, remove controller
         """
         success, userList = self.roomService.deleteClient(peer)
-        rooms = self.roomService.listRooms()
+        rooms = self.roomService.listRoomObjects()
         print(rooms)
         for key in rooms:
             print(key, rooms[key].getAllUser())
@@ -52,6 +56,17 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
 
     def passControl(self, sourcepeer, cmd):
         self.roomService.controllSpaceship(sourcepeer, cmd)
+
+    def parseRequest(self, source, targetType, roomid, playerId, payload):
+        """ should always return a json file """
+        print(source, 'requested', payload, 'from', targetType, 'at room', roomid, playerId)
+        if payload in self.requestopt:
+            res = self.requestopt[payload]()
+        return(json.dumps(res))
+
+    def listRooms(self):
+        """returns list of roomid + #players"""
+        return(self.roomService.listRooms())
 
 class SpaceRaceRXProtocol(WebSocketServerProtocol):
 
@@ -75,7 +90,7 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
         """
         print(payload)
         cmd, target, payload = payload.split(Defaults.DELIMETER)
-        targetType, roomid, targetPlayerId = target.split(Defaults.TARGET_DELIMETER)
+        targetType, roomid, playerId = target.split(Defaults.TARGET_DELIMETER)
 
         """CREATING A DICT OUT OF THE COMMANDS MAY IMPROVE CMD IDENTIFICATION"""
         if cmd == Commands.LOGIN:
@@ -103,6 +118,11 @@ class SpaceRaceRXProtocol(WebSocketServerProtocol):
             cTarget = target
             cPayload = payload
             self.factory.passMessage(sourcepeer, cTarget, cPayload)
+
+        elif cmd == Commands.REQUEST:
+            res = self.factory.parseRequest(self.peer, targetType, roomid, playerId, payload)
+            print(res)
+            self.sendMessage2(res)
 
         elif cmd == Commands.LOGOUT:
             print("[not implemented] " + self.peer + "sent a logout ")
