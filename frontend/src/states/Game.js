@@ -57,13 +57,14 @@ export default class extends Phaser.State {
     }
 
   create () {
+    let scalefact = 1
     let offset = 100;
     this.factory = new SpaceShipFactory({game:this.game});
     this.spaceShips = new Map();
 
       for(let i = 0; i < this.players.length; i++) {
           this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.world.centerX + (offset * (i - 2)), this.world.centerY, 'spaceship'));
-          this.spaceShips.get(this.players[i].id).scale.setTo(4,4);
+          this.spaceShips.get(this.players[i].id).scale.setTo(scalefact,scalefact);
       }
   }
 
