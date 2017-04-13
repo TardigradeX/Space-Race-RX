@@ -17,6 +17,10 @@ export default class extends Phaser.State {
 
         this.websocket.onclose = function(){
           console.log("Controller closed")
+          target = targets.MASTER + TARGET_DELIMETER + NONE + TARGET_DELIMETER + NONE
+          msg = commands.LOGOUT + DELIMETER + target + DELIMETER + NONE
+          this.send(msg);
+
         }
 
         this.leftDown = false;

@@ -66,6 +66,10 @@ class SpaceRaceRXFactory(WebSocketServerFactory):
             res = json.dumps(res, ensure_ascii = False)
         return(res)
 
+    def passLogout(self, sourcepeer):
+        print("Client",sourcepeer, "logged out")
+        self.roomService.deleteClient(sourcepeer)
+
     def listRooms(self):
         """returns list of roomid + #players"""
         return(self.roomService.listRooms())

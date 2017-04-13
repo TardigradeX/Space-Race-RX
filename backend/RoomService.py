@@ -4,8 +4,6 @@ from User import User
 import Commands_util as cutil
 from Commands import Commands, Targets, Defaults
 
-
-
 class RoomService(object):
     def __init__(self):
         self.__freeclients = [] #  list of peers (str())
@@ -38,6 +36,7 @@ class RoomService(object):
         playerId = self.__service[roomid].deleteController(peer)
 
         msg = cutil.createLogout(roomid, playerId)
+        print(">> Sending message to", self.__service[roomid].master.client.peer)
         self.__service[roomid].master.client.sendMessage2(msg)
         success = True
         return(success, None)

@@ -17,6 +17,7 @@ export default class extends Phaser.State {
       };
 
       this.websocket.onmessage = function (message) {
+          console.log("<<", message.data);
           this.parse(message.data)
       }.bind(this);
   }
@@ -47,16 +48,21 @@ export default class extends Phaser.State {
               let playerId = target.split(TARGET_DELIMETER)[2];
               this.spaceShips.get(playerId).movement = cmd;
             }
+            if (cmd == commands.LOGOUT){
+              let playerId = target.split(TARGET_DELIMETER)[2];
+              this.removeSpaceShip(this.spaceShips, playerId);
+            }
+
         }
     }
 
   create () {
-
+    let offset = 100;
     this.factory = new SpaceShipFactory({game:this.game});
     this.spaceShips = new Map();
 
       for(let i = 0; i < this.players.length; i++) {
-          this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.world.centerX, this.world.centerY, 'spaceship'));
+          this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.world.centerX + (offset * (i - 2)), this.world.centerY, 'spaceship'));
       }
   }
 
@@ -81,6 +87,15 @@ export default class extends Phaser.State {
 
     }
 
+  removeSpaceShip(item, playerId){
+      console.log('Deleting ship of player',playerId);
+      /**
+      [BUG]
+      removal incomplete, ship does not vanish on logout
+      destroy the object within the map?
+      **/
+      item.delete(playerId)
+  }
 
   worldBoaderCollide(sprite) {
       if (sprite.x <= 32)
