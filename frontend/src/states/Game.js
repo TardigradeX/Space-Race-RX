@@ -63,6 +63,7 @@ export default class extends Phaser.State {
 
       for(let i = 0; i < this.players.length; i++) {
           this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.world.centerX + (offset * (i - 2)), this.world.centerY, 'spaceship'));
+          this.spaceShips.get(this.players[i].id).scale.setTo(4,4);
       }
   }
 
