@@ -94,7 +94,8 @@ export default class extends Phaser.State {
       removal incomplete, ship does not vanish on logout
       destroy the object within the map?
       **/
-      item.delete(playerId)
+      item.get(playerId).destroy();
+      item.delete(playerId);
   }
 
   worldBoaderCollide(sprite) {
