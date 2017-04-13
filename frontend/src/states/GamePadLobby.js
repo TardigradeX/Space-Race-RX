@@ -96,14 +96,14 @@ export default class extends Phaser.State {
     showAvailableRooms(){
       let bmtext;
       let i = 1;
-      let x = 10;
-      let y = 40;
       let offset = 44;
+      let x = this.game.world.centerX - 100;
+      let y = this.game.world.centerY - offset*3;
 
       let rooms = this.listofRooms;
       for(let key1 in rooms){
         console.log("key =", key1);
-        console.log('Adding text to:', x,y+(offset*i));
+        console.log('Adding text to:', x, y+(offset*i));
         bmtext = this.game.add.bitmapText(x, y + (offset*i) + 10, 'desyrel1', key1, offset);
         bmtext.inputEnabled = true;
         bmtext.useHandCursor = true;
@@ -137,7 +137,7 @@ export default class extends Phaser.State {
       NONE
       this.websocket.send(msg);
 
-      this.state.start('GamePad', false, false, this.websocket, this.roomId);
+      this.state.start('GamePad',true , false, this.websocket, this.roomId);
     }
 
     update() {
