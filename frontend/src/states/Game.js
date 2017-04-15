@@ -25,7 +25,6 @@ export default class extends Phaser.State {
         };
 
         this.websocket.onmessage = function (message) {
-            console.log("<<", message.data);
             this.parse(message.data)
         }.bind(this);
     }
@@ -102,8 +101,7 @@ export default class extends Phaser.State {
     }
 
     update() {
-        for (let spaceShip of this.spaceShips.values()) {
-
+        for (let [id, spaceShip] of this.spaceShips.entries()) {
             if (spaceShip.movement == 'thrust') {
                 this.game.physics.arcade.accelerationFromRotation(spaceShip.rotation - Math.PI / 2, 800, spaceShip.body.acceleration);
             } else {
@@ -120,7 +118,7 @@ export default class extends Phaser.State {
             }
             this.game.physics.arcade.collide(spaceShip, this.foreground);
 
-            this.hasFinished(spaceShip, '2');
+            this.hasFinished(spaceShip, id);
         }
 
     }

@@ -12,7 +12,7 @@ export default class extends Phaser.State {
     preload () {}
 
     create () {
-        const bannerText = 'Player ' + this.winnerId + "has WON :-) ";
+        const bannerText = 'Player ' + this.winnerId + '  has WON :-) ';
         let banner = this.add.text(this.world.centerX, this.game.height - this.game.height/2, bannerText);
         banner.font = 'Bangers';
         banner.padding.set(10, 16);

@@ -44,11 +44,7 @@ export default class extends Phaser.State {
     }
 
     create() {
-        let input = document.createElement("input");input.type = "number";input.style.cssText = "position:absolute; left:-1px; top: -1px; width:1px; height:1px; opacity:0";document.body.appendChild(input);
-        input.focus();
-        this.game.input.keyboard.onDownCallback = function() {
-            this.keyPress(this.game.input.keyboard.event.keyCode)
-        }.bind(this);
+
     }
 
     parseMessage(message){
@@ -84,7 +80,6 @@ export default class extends Phaser.State {
           this.state.start('GamePad', false, false, this.websocket, this.roomId);
         }
       }
-      // this.state.start('GamePad', false, false, this.websocket, this.roomId);
     }
 
     sendRoomRequest() {
