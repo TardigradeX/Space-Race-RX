@@ -65,7 +65,7 @@ export default class extends Phaser.State {
 					game: this.game,
 					x: this.game.world.centerX - 95 - 45,
 					y: 200,
-					seconds: 3,
+					seconds: 0,
 					onComplete: function() { console.log('>>> Go Go Go') }
 				});
         this.game.add.text(this.game.world.centerX - 95 - 60, 230, "until game start");

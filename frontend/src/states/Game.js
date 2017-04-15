@@ -8,9 +8,14 @@ export default class extends Phaser.State {
       this.websocket = websocket;
       this.roomId = roomId;
       this.players = players;
+
+      this.emitter;
+
   }
 
   preload () {
+      this.load.image('explosion','./assets/sprites/enemy-bullet.png');
+
       // Log errors
       this.websocket.onerror = function (error) {
           console.log('WebSocket Error ' + error);
@@ -20,45 +25,49 @@ export default class extends Phaser.State {
           console.log("<<", message.data);
           this.parse(message.data)
       }.bind(this);
+
   }
 
-    parse(message) {
-        let mySplit = message.split(DELIMETER);
-        if (mySplit.length == 3) {
-            let cmd = mySplit[0];
-            let target = mySplit[1];
-            let payload = mySplit[2];
-            if (cmd == 'message') {
-                let playerId = target.split(TARGET_DELIMETER)[2];
-                this.spaceShips.get(playerId).movement = payload;
-            }
-            if (cmd == commands.LEFTROLL){
+  parse(message) {
+      let mySplit = message.split(DELIMETER);
+      if (mySplit.length == 3) {
+          let cmd = mySplit[0];
+          let target = mySplit[1];
+          let payload = mySplit[2];
+          if (cmd == 'message') {
               let playerId = target.split(TARGET_DELIMETER)[2];
-              this.spaceShips.get(playerId).movement = cmd;
-            }
-            if (cmd == commands.RIGHTROLL){
-              let playerId = target.split(TARGET_DELIMETER)[2];
-              this.spaceShips.get(playerId).movement = cmd;
-            }
-            if (cmd == commands.THRUST){
-              let playerId = target.split(TARGET_DELIMETER)[2];
-              this.spaceShips.get(playerId).movement = cmd;
-            }
-            if (cmd == commands.NONE){
-              let playerId = target.split(TARGET_DELIMETER)[2];
-              this.spaceShips.get(playerId).movement = cmd;
-            }
-            if (cmd == commands.LOGOUT){
-              let playerId = target.split(TARGET_DELIMETER)[2];
-              this.removeSpaceShip(this.spaceShips, playerId);
-            }
+              this.spaceShips.get(playerId).movement = payload;
+          }
+          if (cmd == commands.LEFTROLL){
+            let playerId = target.split(TARGET_DELIMETER)[2];
+            this.spaceShips.get(playerId).movement = cmd;
+          }
+          if (cmd == commands.RIGHTROLL){
+            let playerId = target.split(TARGET_DELIMETER)[2];
+            this.spaceShips.get(playerId).movement = cmd;
+          }
+          if (cmd == commands.THRUST){
+            let playerId = target.split(TARGET_DELIMETER)[2];
+            this.spaceShips.get(playerId).movement = cmd;
+          }
+          if (cmd == commands.NONE){
+            let playerId = target.split(TARGET_DELIMETER)[2];
+            this.spaceShips.get(playerId).movement = cmd;
+          }
+          if (cmd == commands.LOGOUT){
+            let playerId = target.split(TARGET_DELIMETER)[2];
+            this.removeSpaceShip(this.spaceShips, playerId);
+          }
 
-        }
+      }
     }
 
   create () {
+
+
     let scalefact = 1
     let offset = 100;
+
     this.factory = new SpaceShipFactory({game:this.game});
     this.spaceShips = new Map();
 
@@ -66,7 +75,26 @@ export default class extends Phaser.State {
           this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.world.centerX + (offset * (i - 2)), this.world.centerY, 'spaceship'));
           this.spaceShips.get(this.players[i].id).scale.setTo(scalefact,scalefact);
       }
+
   }
+
+
+  // createEmitter(){
+  //   let emitter = this.game.add.emitter(100,100,100);
+  //
+  //   emitter.scale.setTo(4,4);
+  //   emitter.lifespan = 2000;
+  //
+  //   emitter.gravity = 1;
+  //   emitter.lifespan = 2000;
+  //   emitter.minRotation = 0;
+  //   // this.emitter.setAlpha(0.1, 0.1);
+  //   emitter.maxRotation = 0;
+  //   emitter.maxParticleSpeed=1;
+  //   emitter.makeParticles('explosion');
+  //
+  //   return(emitter);
+  // }
 
   update () {
         for (let spaceShip of this.spaceShips.values()) {
@@ -96,8 +124,9 @@ export default class extends Phaser.State {
       removal incomplete, ship does not vanish on logout
       destroy the object within the map?
       **/
-      item.get(playerId).destroy();
-      item.delete(playerId);
+      item.get(playerId).explode();
+      // item.get(playerId).destroy();
+      // item.delete(playerId);
   }
 
   worldBoaderCollide(sprite) {
