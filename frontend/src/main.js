@@ -10,6 +10,7 @@ import DummyDecide from './states/DummyDecide'
 import Lobby from './states/Lobby'
 import GamePad from './states/GamePad'
 import GamePadLobby from "./states/GamePadLobby";
+import GameFinished from "./states/GameFinished";
 
 import config from './config'
 
@@ -30,6 +31,7 @@ class Game extends Phaser.Game {
     this.state.add('Lobby', Lobby, false);
     this.state.add('GamePad', GamePad, false);
     this.state.add('GamePadLobby', GamePadLobby, false);
+    this.state.add('GameFinished', GameFinished, false);
     this.state.start('Boot')
 
   }

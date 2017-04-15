@@ -74,9 +74,9 @@ export default class extends Phaser.State {
         if(this.leftDown && this.rightDown) {
             payload = strings.commands.THRUST;
          } else if(this.leftDown) {
-            payload = strings.commands.LEFTROLL;
-         } else if(this.rightDown) {
             payload = strings.commands.RIGHTROLL;
+         } else if(this.rightDown) {
+            payload = strings.commands.LEFTROLL;
          }else {
             payload = strings.commands.NONE;
          }

@@ -16,6 +16,8 @@ export default class SpaceShipFactory {
             asset: asset
         });
 
+        ship.scale.setTo(0.5, 0.5);
+
         this.game.add.existing(ship);
         this.game.physics.enable(ship, Phaser.Physics.ARCADE);
 

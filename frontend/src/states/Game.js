@@ -2,6 +2,8 @@
 import Phaser from 'phaser'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
 import {commands, DELIMETER, TARGET_DELIMETER} from "../commands";
+import {getFinishFromMap, getStartFromMap} from '../tileMapUtils';
+import Finish from '../sprites/finish'
 
 export default class extends Phaser.State {
     init(websocket, roomId, players) {
@@ -14,6 +16,8 @@ export default class extends Phaser.State {
         this.game.load.tilemap('level1', 'assets/maps/space_race_level1.json', null, Phaser.Tilemap.TILED_JSON);
 
         this.game.load.image('gameTiles', 'assets/maps/tile_set.png');
+        this.load.image('spaceship', 'assets/images/spaceship.png');
+        this.load.image('finish', 'assets/images/finish.png');
 
         // Log errors
         this.websocket.onerror = function (error) {
@@ -79,8 +83,21 @@ export default class extends Phaser.State {
         this.factory = new SpaceShipFactory({game: this.game});
         this.spaceShips = new Map();
 
+
+        let startPosition =  getStartFromMap(this.map);
+        this.finishPosition = getFinishFromMap(this.map);
+
+        let finish = new Finish({
+            game: this.game,
+            x: this.finishPosition.x,
+            y: this.finishPosition.y,
+            asset: 'finish'
+        });
+
+        this.game.add.existing(finish);
+
         for (let i = 0; i < this.players.length; i++) {
-            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.world.centerX + (offset * (i - 2)), this.world.centerY, 'spaceship'));
+            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
         }
     }
 
@@ -102,6 +119,8 @@ export default class extends Phaser.State {
                 spaceShip.body.angularVelocity = 0;
             }
             this.game.physics.arcade.collide(spaceShip, this.foreground);
+
+            this.hasFinished(spaceShip, '2');
         }
 
     }
@@ -117,23 +136,14 @@ export default class extends Phaser.State {
       item.delete(playerId);
   }
 
-    worldBoaderCollide(sprite) {
-        if (sprite.x <= 32) {
-            this.worldCollision();
-        }
-        else if (sprite.x >= this.game.width - 32) {
-            this.worldCollision();
-        }
-
-        if (sprite.y <= 32) {
-            this.worldCollision();
-        }
-        else if (sprite.y >= this.game.height - 32) {
-            this.worldCollision();
+    hasFinished(sprite, id) {
+        if (Math.abs(sprite.x - this.finishPosition.x) < 32 &&
+            Math.abs(sprite.y - this.finishPosition.y) < 32) {
+            this.playerFinished(id);
         }
     }
 
-    worldCollision() {
-        //this.state.start('GameOver')
+    playerFinished(id) {
+        this.state.start('GameFinished', true, false, id);
     }
 }
