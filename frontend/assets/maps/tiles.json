@@ -1,0 +1,12 @@
+{ "columns":25,
+ "image":"tile_set.png",
+ "imageheight":1280,
+ "imagewidth":800,
+ "margin":0,
+ "name":"MY_TILES",
+ "spacing":0,
+ "tilecount":1000,
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset"
+}
