@@ -1,7 +1,7 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
-import {commands, DELIMETER, TARGET_DELIMETER} from "../commands";
+import {commands, DELIMETER, TARGET_DELIMETER, playerStates} from "../commands";
 import {getFinishFromMap, getStartFromMap} from '../tileMapUtils';
 import Finish from '../sprites/finish'
 
@@ -100,43 +100,58 @@ export default class extends Phaser.State {
         this.game.add.existing(finish);
 
         // For Debugging Maps
-        // this.spaceShips.set("1", this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
+         // this.spaceShips.set("1", this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
 
         for (let i = 0; i < this.players.length; i++) {
             this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
         }
     }
 
-    resetShip (spaceShip) {
-        spaceShip.x = this.startPosition.x;
-        spaceShip.y = this.startPosition.y;
+    resetShip (spaceShip, x ,y) {
+        console.log("Reset Ship");
+        spaceShip.repair();
+        spaceShip.x = x;
+        spaceShip.y = y;
     }
 
 
     update() {
         for (let [id, spaceShip] of this.spaceShips.entries()) {
-            if (spaceShip.movement == 'thrust') {
-                this.game.physics.arcade.accelerationFromRotation(spaceShip.rotation - Math.PI / 2, 800, spaceShip.body.acceleration);
-            } else {
-                spaceShip.body.acceleration.set(0);
+            if (spaceShip.playerState == playerStates.ALIVE) {
+                if (spaceShip.movement == 'thrust') {
+                    this.game.physics.arcade.accelerationFromRotation(spaceShip.rotation - Math.PI / 2, 800, spaceShip.body.acceleration);
+                } else {
+                    spaceShip.body.acceleration.set(0);
+                }
+
+                if (spaceShip.movement == 'left') {
+                    spaceShip.body.angularVelocity = -300;
+                }
+                else if (spaceShip.movement == 'right') {
+                    spaceShip.body.angularVelocity = 300;
+                } else {
+                    spaceShip.body.angularVelocity = 0;
+                }
+                if (this.game.physics.arcade.collide(spaceShip, this.foreground)) {
+                    this.explodeAndWaitForReset(spaceShip);
+                }
+
+                this.hasFinished(spaceShip, id);
             }
 
-            if (spaceShip.movement == 'left') {
-                spaceShip.body.angularVelocity = -300;
-            }
-            else if (spaceShip.movement == 'right') {
-                spaceShip.body.angularVelocity = 300;
-            } else {
-                spaceShip.body.angularVelocity = 0;
-            }
-            if(this.game.physics.arcade.collide(spaceShip, this.foreground)) {
-                this.resetShip(spaceShip);
-            }
-
-            this.hasFinished(spaceShip, id);
         }
 
     }
+
+    explodeAndWaitForReset(spaceShip) {
+        spaceShip.explode();
+        this.game.time.events.add(
+            3000,
+            function() {
+            this.resetShip(spaceShip, this.startPosition.x, this.startPosition.y)},
+            this
+        );
+   }
 
   removeSpaceShip(item, playerId){
       console.log('Deleting ship of player',playerId);
