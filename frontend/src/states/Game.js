@@ -72,11 +72,7 @@ export default class extends Phaser.State {
         this.backgroundlayer = this.map.createLayer('background');
         this.foreground = this.map.createLayer('foreground');
 
-        //collision on blockedLayer
-        this.map.setCollisionBetween(1, 100000, true, 'foreground');
-
-        //  This will set Tile ID 26 (the coin) to call the hitCoin function when collided with
-        this.map.setTileIndexCallback(856, () => console.log("BOOOOOOOM"), this);
+        this.map.setCollisionBetween(1, 1000, true, 'foreground');
 
         //resizes the game world to match the layer dimensions
         this.backgroundlayer.resizeWorld();
@@ -86,7 +82,8 @@ export default class extends Phaser.State {
         this.spaceShips = new Map();
 
 
-        let startPosition =  getStartFromMap(this.map);
+
+        this.startPosition =  getStartFromMap(this.map);
         this.finishPosition = getFinishFromMap(this.map);
 
         let finish = new Finish({
@@ -98,10 +95,19 @@ export default class extends Phaser.State {
 
         this.game.add.existing(finish);
 
+        // For Debugging Maps
+        // this.spaceShips.set("1", this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
+
         for (let i = 0; i < this.players.length; i++) {
-            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
+            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
         }
     }
+
+    resetShip (spaceShip) {
+        spaceShip.x = this.startPosition.x;
+        spaceShip.y = this.startPosition.y;
+    }
+
 
     update() {
         for (let [id, spaceShip] of this.spaceShips.entries()) {
@@ -119,7 +125,9 @@ export default class extends Phaser.State {
             } else {
                 spaceShip.body.angularVelocity = 0;
             }
-            this.game.physics.arcade.collide(spaceShip, this.foreground);
+            if(this.game.physics.arcade.collide(spaceShip, this.foreground)) {
+                this.resetShip(spaceShip);
+            }
 
             this.hasFinished(spaceShip, id);
         }
