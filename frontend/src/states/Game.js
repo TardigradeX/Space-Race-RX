@@ -75,6 +75,9 @@ export default class extends Phaser.State {
         //collision on blockedLayer
         this.map.setCollisionBetween(1, 100000, true, 'foreground');
 
+        //  This will set Tile ID 26 (the coin) to call the hitCoin function when collided with
+        this.map.setTileIndexCallback(856, () => console.log("BOOOOOOOM"), this);
+
         //resizes the game world to match the layer dimensions
         this.backgroundlayer.resizeWorld();
 
