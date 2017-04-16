@@ -38,6 +38,11 @@ export default class extends Phaser.Sprite {
       this.emitter.start(false, 4000, 100, 5000);
       this.emitter.update();
 
-      this.alpha = 0.1;
+      this.alpha = 0.0;
+    }
+
+    repair() {
+        this.emitter.stop();
+        this.alpha = 1.0;
     }
 }

@@ -11,7 +11,6 @@ export default class extends Phaser.State {
         this.websocket = websocket;
         this.roomId = roomId;
         this.players = players;
-
         this.emitter;
     }
 
