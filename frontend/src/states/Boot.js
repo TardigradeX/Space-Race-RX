@@ -21,8 +21,15 @@ export default class extends Phaser.State {
 
     this.load.bitmapFont('desyrel1', './assets/bitmapFonts/desyrel.png', './assets/bitmapFonts/desyrel.xml');
 
+<<<<<<< HEAD
     this.load.image('loaderBg', './assets/images/loader-bg.png');
     this.load.image('loaderBar', './assets/images/loader-bar.png');
+=======
+    // this.load.spritesheet('explosion','./assets/sprites/fruitnveg32wh37.png',32,37, 31 );
+
+    this.load.image('loaderBg', './assets/images/loader-bg.png')
+    this.load.image('loaderBar', './assets/images/loader-bar.png')
+>>>>>>> ui_prototypes
   }
 
   render () {

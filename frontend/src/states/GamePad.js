@@ -29,7 +29,8 @@ export default class extends Phaser.State {
 
     create() {
 
-        this.buttonBoostRight = this.game.add.button(300, this.game.world.centerY / 2, 'button', null, this, 0, 1, 0, 1);
+        this.buttonBoostRight = this.game.add.button(200, this.game.world.centerY / 2, 'button', null, this, 0, 1, 0, 1);
+        this.buttonBoostRight.scale.setTo(1.8, 1.8);
         this.buttonBoostRight.events.onInputOver.add(function () {
             this.rightDown = true;
             this.controll()
@@ -49,6 +50,7 @@ export default class extends Phaser.State {
 
 
         this.buttonBoostLeft = this.game.add.button(32, this.game.world.centerY / 2, 'button', null, this, 0, 1, 0, 1);
+        this.buttonBoostLeft.scale.setTo(1.8, 1.8);
         this.buttonBoostLeft.events.onInputOver.add(function () {
             this.leftDown = true;
             this.controll()

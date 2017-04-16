@@ -27,8 +27,6 @@ export default class SpaceShipFactory {
         ship.body.collideWorldBounds=true;
         ship.body.bounce.setTo(0.4, 0.4);
 
-
         return ship;
     }
-
 }
