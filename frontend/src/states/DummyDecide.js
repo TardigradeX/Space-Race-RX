@@ -20,9 +20,16 @@ export default class extends Phaser.State {
     }
 
     create () {
-        this.buttonMaster = this.game.add.button(this.game.world.centerX - 95, 200, 'button', this.onMaster, this, 2, 1, 0);
+      let mastertext, controllertext,returntext;
+      this.buttonMaster = this.game.add.button(this.game.world.centerX/2, this.game.world.centerY/4, 'button', this.onMaster, this, 2, 1, 0);
+      this.buttonMaster.anchor.setTo(1.2,0.5);
+      mastertext = this.game.add.bitmapText(this.buttonMaster.x, this.buttonMaster.y, 'desyrel1','Create room');
+      mastertext.anchor.setTo(0, 0.5);
+      this.buttonController = this.game.add.button(this.game.world.centerX/2, (2*this.game.world.centerY)/4, 'button', this.onController, this, 2, 1, 0);
+      this.buttonController.anchor.setTo(1.2, 0.5);
+      controllertext = this.game.add.bitmapText(this.buttonController.x, this.buttonController.y, 'desyrel1','Join room');
+      controllertext.anchor.setTo(0, 0.5);
 
-        this.buttonController = this.game.add.button(this.game.world.centerX - 95, 400, 'button', this.onController, this, 2, 1, 0);
     }
 
 
