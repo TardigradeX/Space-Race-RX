@@ -86,6 +86,7 @@ export default class extends Phaser.State {
 
         for (let i = 0; i < this.players.length; i++) {
             this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
+            this.spaceShips.get(this.players[i].id).time = '00:00:00';
         }
 
         this.gametimer = new BitmapTimer({game : this.game,  x : this.game.world.centerX, y : 40, font : 'desyrel1', size : 64});
@@ -117,6 +118,12 @@ export default class extends Phaser.State {
 
             this.hasFinished(spaceShip, id);
         }
+    }
+
+    render(){
+      for (let [id, spaceShip] of this.spaceShips.entries()) {
+        this.game.debug.text(this.spaceShips.get(id).time, 2,14);
+      }
     }
 
     parse(message) {
@@ -173,7 +180,7 @@ export default class extends Phaser.State {
 
     playerFinished(id) {
       this.spaceShips.get(id).time = this.gametimer.getMilliseconds();
-      
+      this.spaceShips.get(id).isAlive = false;
       // this.state.start('GameFinished', true, false, id);
     }
 }

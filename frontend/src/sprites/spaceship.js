@@ -14,10 +14,15 @@ export default class extends Phaser.Sprite {
         this.emitter.makeParticles('explosion');
         // this.emitter.setAlpha(1, 0, 3000);
 
+        this.isAlive = true;
     }
 
     setMovement(movement) {
+      if (this.isAlive){
         this.movement = movement;
+      } else {
+        this.movement = "none";
+      }
     }
 
     update(){
@@ -35,6 +40,7 @@ export default class extends Phaser.Sprite {
 
       console.log('!!!Spaceship explosion!!!');
       console.log("coordinates", this.emitter.x, this.emitter.y);
+      this.isAlive = false;
       this.emitter.start(false, 4000, 100, 5000);
       this.emitter.update();
 

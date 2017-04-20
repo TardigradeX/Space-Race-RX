@@ -16,7 +16,7 @@ export default class extends Phaser.BitmapText {
   update(){
     let t1, s1;
     t1 = this.isCountdown ? (this.event.delay + Phaser.Timer.SECOND) - this.timer.ms : this.timer.ms;
-    s1 = this.milliseconds ? this.formatMilliseconds(t1) : this.formatSeconds(t1);
+    s1 = this.formatSeconds(t1);
     this.text = s1;
   }
 
@@ -49,7 +49,7 @@ export default class extends Phaser.BitmapText {
     this.isCountdown = true;
     console.log(this.event.delay);
   }
-  getMilliseconds {
+  getMilliseconds() {
       return(this.formatMilliseconds(this.timer.ms));
   }
 
