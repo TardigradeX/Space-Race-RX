@@ -180,7 +180,14 @@ export default class extends Phaser.State {
 
     playerFinished(id) {
       this.spaceShips.get(id).time = this.gametimer.getMilliseconds();
-      this.spaceShips.get(id).isAlive = false;
-      // this.state.start('GameFinished', true, false, id);
+      this.spaceShips.get(id).explode();
+      // this.spaceShips.get(id).isAlive = false;
+      let n,c;
+      n = this.spaceShips.length;
+      c = 0;
+      for(let [id, spaceShip] of this.spaceShips.entries()){
+        if(!this.spaceShips.get(id).isFinished){c++;}
+      }
+      if(c == n){ this.state.start('GameFinished', true, false, id);}
     }
 }
