@@ -29,6 +29,7 @@ export default class extends Phaser.State {
   render () {
     if (this.fontsReady) {
       this.state.start('DummyDecide');
+      // this.state.start('Game');
     }
   }
 

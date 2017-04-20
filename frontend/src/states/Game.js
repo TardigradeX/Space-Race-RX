@@ -3,7 +3,7 @@ import Phaser from 'phaser'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
 import {commands, DELIMETER, TARGET_DELIMETER} from "../commands";
 import {getFinishFromMap, getStartFromMap} from '../tileMapUtils';
-import Finish from '../sprites/finish'
+import Finish from '../sprites/finish';
 
 export default class extends Phaser.State {
 
@@ -12,7 +12,23 @@ export default class extends Phaser.State {
         this.roomId = roomId;
         this.players = players;
 
-        this.emitter;
+        this.controllerActive = false;
+
+        this.gametimer;
+        this.countdownEvent;
+        this.startTime;
+        this.timeview;
+    }
+
+    startGame(){
+      this.gametimer.stop();
+      this.controllerActive = true;
+      this.gametimer.destroy();
+
+      console.log('Restarting timer');
+      this.gametimer = this.game.time.create();
+      this.gametimer.start();
+      console.log("Timer is running:", this.gametimer.running);
     }
 
     preload() {
@@ -24,6 +40,7 @@ export default class extends Phaser.State {
         this.load.image('spaceship', 'assets/images/spaceship.png');
         this.load.image('finish', 'assets/images/finish.png');
 
+
         // Log errors
         this.websocket.onerror = function (error) {
             console.log('WebSocket Error ' + error);
@@ -32,6 +49,99 @@ export default class extends Phaser.State {
         this.websocket.onmessage = function (message) {
             this.parse(message.data)
         }.bind(this);
+    }
+
+    create() {
+        this.map = this.game.add.tilemap('level1');
+
+        this.map.addTilesetImage('MY_TILES', 'gameTiles');
+
+        //create layer
+        this.backgroundlayer = this.map.createLayer('background');
+        this.foreground = this.map.createLayer('foreground');
+
+        //collision on blockedLayer
+        this.map.setCollisionBetween(1, 100000, true, 'foreground');
+
+        //resizes the game world to match the layer dimensions
+        this.backgroundlayer.resizeWorld();
+
+        let offset = 100;
+        this.factory = new SpaceShipFactory({game: this.game});
+        this.spaceShips = new Map();
+
+
+        let startPosition =  getStartFromMap(this.map);
+        this.finishPosition = getFinishFromMap(this.map);
+
+        let finish = new Finish({
+            game: this.game,
+            x: this.finishPosition.x,
+            y: this.finishPosition.y,
+            asset: 'finish'
+        });
+
+        this.game.add.existing(finish);
+        // this.spaceShips.set("1", this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
+
+        for (let i = 0; i < this.players.length; i++) {
+            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
+        }
+
+        this.gametimer = this.game.time.create();
+        this.countdownEvent = this.gametimer.add(Phaser.Timer.SECOND * 3, this.startGame, this);
+        this.gametimer.start();
+
+        this.timeview = this.game.add.bitmapText(this.game.world.centerX - 50,35,'desyrel1', this.formatTime(Math.round(this.gametimer.ms / 1000), 32));
+    }
+
+    update() {
+        for (let [id, spaceShip] of this.spaceShips.entries()) {
+          if(this.controllerActive){
+              if (spaceShip.movement == 'thrust') {
+                  this.game.physics.arcade.accelerationFromRotation(spaceShip.rotation - Math.PI / 2, 800, spaceShip.body.acceleration);
+              } else {
+                  spaceShip.body.acceleration.set(0);
+              }
+
+              if (spaceShip.movement == 'left') {
+                  spaceShip.body.angularVelocity = -300;
+              }
+              else if (spaceShip.movement == 'right') {
+                  spaceShip.body.angularVelocity = 300;
+              } else {
+                  spaceShip.body.angularVelocity = 0;
+              }
+            }
+            this.game.physics.arcade.collide(spaceShip, this.foreground);
+
+            this.hasFinished(spaceShip, id);
+        }
+    }
+
+    render(){
+      this.viewtime();
+    }
+
+    viewtime(){
+      let s1, t1;
+      t1 = this.controllerActive ? this.gametimer.ms : this.countdownEvent.delay - this.gametimer.ms
+      if(t1 < 0){
+        let tmp = this.game.add.bitmapText(this.game.world.centerX - 90, 150, 'desyrel1', 'GO', 256);
+        game.time.events.add(500, function(){tmp.destroy()}, this);
+      }
+      s1 = this.formatTime(Math.round(t1/1000));
+      this.timeview.text = s1;
+    }
+
+    formatTime(s) {
+      if(s < 0){
+        return("00:00")
+      }
+      // Convert seconds (s) to a nicely formatted and padded time string
+      var minutes = "0" + Math.floor(s / 60);
+      var seconds = "0" + (s - minutes * 60);
+      return minutes.substr(-2) + ":" + seconds.substr(-2);
     }
 
     parse(message) {
@@ -67,68 +177,7 @@ export default class extends Phaser.State {
       }
     }
 
-    create() {
-
-        this.map = this.game.add.tilemap('level1');
-
-        this.map.addTilesetImage('MY_TILES', 'gameTiles');
-
-        //create layer
-        this.backgroundlayer = this.map.createLayer('background');
-        this.foreground = this.map.createLayer('foreground');
-
-        //collision on blockedLayer
-        this.map.setCollisionBetween(1, 100000, true, 'foreground');
-
-        //resizes the game world to match the layer dimensions
-        this.backgroundlayer.resizeWorld();
-
-        let offset = 100;
-        this.factory = new SpaceShipFactory({game: this.game});
-        this.spaceShips = new Map();
-
-
-        let startPosition =  getStartFromMap(this.map);
-        this.finishPosition = getFinishFromMap(this.map);
-
-        let finish = new Finish({
-            game: this.game,
-            x: this.finishPosition.x,
-            y: this.finishPosition.y,
-            asset: 'finish'
-        });
-
-        this.game.add.existing(finish);
-
-        for (let i = 0; i < this.players.length; i++) {
-            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
-        }
-    }
-
-    update() {
-        for (let [id, spaceShip] of this.spaceShips.entries()) {
-            if (spaceShip.movement == 'thrust') {
-                this.game.physics.arcade.accelerationFromRotation(spaceShip.rotation - Math.PI / 2, 800, spaceShip.body.acceleration);
-            } else {
-                spaceShip.body.acceleration.set(0);
-            }
-
-            if (spaceShip.movement == 'left') {
-                spaceShip.body.angularVelocity = -300;
-            }
-            else if (spaceShip.movement == 'right') {
-                spaceShip.body.angularVelocity = 300;
-            } else {
-                spaceShip.body.angularVelocity = 0;
-            }
-            this.game.physics.arcade.collide(spaceShip, this.foreground);
-
-            this.hasFinished(spaceShip, id);
-        }
-
-    }
-
-  removeSpaceShip(item, playerId){
+    removeSpaceShip(item, playerId){
       console.log('Deleting ship of player',playerId);
       /**
       [BUG]
@@ -138,7 +187,7 @@ export default class extends Phaser.State {
       item.get(playerId).explode();
       // item.get(playerId).destroy();
       // item.delete(playerId);
-  }
+    }
 
     hasFinished(sprite, id) {
         if (Math.abs(sprite.x - this.finishPosition.x) < 32 &&
