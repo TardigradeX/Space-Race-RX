@@ -4,6 +4,7 @@ import SpaceShipFactory from "../sprites/SpaceShipFactory";
 import {commands, DELIMETER, TARGET_DELIMETER} from "../commands";
 import {getFinishFromMap, getStartFromMap} from '../tileMapUtils';
 import Finish from '../sprites/finish';
+import BitmapTimer from '../sprites/BitmapTimer';
 
 export default class extends Phaser.State {
 
@@ -21,14 +22,13 @@ export default class extends Phaser.State {
     }
 
     startGame(){
-      this.gametimer.stop();
       this.controllerActive = true;
-      this.gametimer.destroy();
-
-      console.log('Restarting timer');
-      this.gametimer = this.game.time.create();
-      this.gametimer.start();
-      console.log("Timer is running:", this.gametimer.running);
+      this.gametimer.visible = false;
+      // Phaser.Game.add.bitmapText(x, y, font, text, size, group) : Phaser.BitmapText;
+      this.gametimer.reset(true);
+      let tmp = this.game.add.bitmapText(this.game.world.centerX, this.game.world.centerY, 'desyrel1', "GO", 256);
+      tmp.anchor.set(0.5);
+      this.game.time.events.add(1000, function(){tmp.destroy(); this.gametimer.visible = true; this.gametimer.start();}, this);
     }
 
     preload() {
@@ -88,12 +88,11 @@ export default class extends Phaser.State {
             this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
         }
 
-        this.gametimer = this.game.time.create();
-        this.countdownEvent = this.gametimer.add(Phaser.Timer.SECOND * 3, this.startGame, this);
+        this.gametimer = new BitmapTimer({game : this.game,  x : this.game.world.centerX, y : 40, font : 'desyrel1', size : 64});
+        this.gametimer.anchor.setTo(0.5, 0);
+        this.game.add.existing(this.gametimer);
+        this.gametimer.countdown(Phaser.Timer.SECOND * 3, this.startGame, this);
         this.gametimer.start();
-
-        this.timeview = this.game.add.bitmapText(this.game.world.centerX,(1*this.game.world.centerY/5),'desyrel1', this.formatTime(Math.round(this.gametimer.ms / 1000), 32));
-        this.timeview.anchor.setTo(0.5,0);
     }
 
     update() {
@@ -118,32 +117,6 @@ export default class extends Phaser.State {
 
             this.hasFinished(spaceShip, id);
         }
-    }
-
-    render(){
-      this.viewtime();
-    }
-
-    viewtime(){
-      let s1, t1;
-      t1 = this.controllerActive ? this.gametimer.ms : this.countdownEvent.delay - this.gametimer.ms
-      if(t1 < 0){
-        let tmp = this.game.add.bitmapText(this.game.world.centerX, this.game.world.centerY, 'desyrel1', 'GO', 256);
-        tmp.anchor.setTo(0.5);
-        game.time.events.add(500, function(){tmp.destroy()}, this);
-      }
-      s1 = this.formatTime(Math.round(t1/1000));
-      this.timeview.text = s1;
-    }
-
-    formatTime(s) {
-      if(s < 0){
-        return("00:00")
-      }
-      // Convert seconds (s) to a nicely formatted and padded time string
-      var minutes = "0" + Math.floor(s / 60);
-      var seconds = "0" + (s - minutes * 60);
-      return minutes.substr(-2) + ":" + seconds.substr(-2);
     }
 
     parse(message) {
@@ -199,6 +172,8 @@ export default class extends Phaser.State {
     }
 
     playerFinished(id) {
-        this.state.start('GameFinished', true, false, id);
+      this.spaceShips.get(id).time = this.gametimer.getMilliseconds();
+      
+      // this.state.start('GameFinished', true, false, id);
     }
 }
