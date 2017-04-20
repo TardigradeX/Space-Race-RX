@@ -41,14 +41,14 @@ export default class extends Phaser.State {
         this.load.image('finish', 'assets/images/finish.png');
 
 
-        // // Log errors
-        // this.websocket.onerror = function (error) {
-        //     console.log('WebSocket Error ' + error);
-        // };
-        //
-        // this.websocket.onmessage = function (message) {
-        //     this.parse(message.data)
-        // }.bind(this);
+        // Log errors
+        this.websocket.onerror = function (error) {
+            console.log('WebSocket Error ' + error);
+        };
+
+        this.websocket.onmessage = function (message) {
+            this.parse(message.data)
+        }.bind(this);
     }
 
     create() {
@@ -82,11 +82,11 @@ export default class extends Phaser.State {
         });
 
         this.game.add.existing(finish);
-        this.spaceShips.set("1", this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
+        // this.spaceShips.set("1", this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
 
-        // for (let i = 0; i < this.players.length; i++) {
-        //     this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
-        // }
+        for (let i = 0; i < this.players.length; i++) {
+            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
+        }
 
         this.gametimer = this.game.time.create();
         this.countdownEvent = this.gametimer.add(Phaser.Timer.SECOND * 3, this.startGame, this);
