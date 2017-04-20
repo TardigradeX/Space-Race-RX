@@ -41,14 +41,14 @@ export default class extends Phaser.State {
         this.load.image('finish', 'assets/images/finish.png');
 
 
-        // Log errors
-        this.websocket.onerror = function (error) {
-            console.log('WebSocket Error ' + error);
-        };
-
-        this.websocket.onmessage = function (message) {
-            this.parse(message.data)
-        }.bind(this);
+        // // Log errors
+        // this.websocket.onerror = function (error) {
+        //     console.log('WebSocket Error ' + error);
+        // };
+        //
+        // this.websocket.onmessage = function (message) {
+        //     this.parse(message.data)
+        // }.bind(this);
     }
 
     create() {
@@ -82,17 +82,18 @@ export default class extends Phaser.State {
         });
 
         this.game.add.existing(finish);
-        // this.spaceShips.set("1", this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
+        this.spaceShips.set("1", this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
 
-        for (let i = 0; i < this.players.length; i++) {
-            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
-        }
+        // for (let i = 0; i < this.players.length; i++) {
+        //     this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x, startPosition.y, 'spaceship'));
+        // }
 
         this.gametimer = this.game.time.create();
         this.countdownEvent = this.gametimer.add(Phaser.Timer.SECOND * 3, this.startGame, this);
         this.gametimer.start();
 
-        this.timeview = this.game.add.bitmapText(this.game.world.centerX - 50,35,'desyrel1', this.formatTime(Math.round(this.gametimer.ms / 1000), 32));
+        this.timeview = this.game.add.bitmapText(this.game.world.centerX,(1*this.game.world.centerY/5),'desyrel1', this.formatTime(Math.round(this.gametimer.ms / 1000), 32));
+        this.timeview.anchor.setTo(0.5,0);
     }
 
     update() {
@@ -127,7 +128,8 @@ export default class extends Phaser.State {
       let s1, t1;
       t1 = this.controllerActive ? this.gametimer.ms : this.countdownEvent.delay - this.gametimer.ms
       if(t1 < 0){
-        let tmp = this.game.add.bitmapText(this.game.world.centerX - 90, 150, 'desyrel1', 'GO', 256);
+        let tmp = this.game.add.bitmapText(this.game.world.centerX, this.game.world.centerY, 'desyrel1', 'GO', 256);
+        tmp.anchor.setTo(0.5);
         game.time.events.add(500, function(){tmp.destroy()}, this);
       }
       s1 = this.formatTime(Math.round(t1/1000));
