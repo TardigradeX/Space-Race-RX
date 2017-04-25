@@ -65,6 +65,9 @@ export default class extends Phaser.State {
     }
 
     create() {
+        this.explosion = this.game.add.audio('explosion');
+        this.game.sound.setDecodedCallback([this.explosion], this.soundStart, this);
+
         this.map = this.game.add.tilemap('level1');
 
         this.map.addTilesetImage('MY_TILES', 'gameTiles');
@@ -130,6 +133,10 @@ export default class extends Phaser.State {
             font: 'desyrel1',
             size: 64
         });
+    }
+
+    soundStart() {
+        console.log("Sound is READY:");
     }
 
     resetShip(spaceShip, x, y) {
