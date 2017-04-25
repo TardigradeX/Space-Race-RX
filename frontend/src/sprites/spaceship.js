@@ -9,7 +9,12 @@ export default class extends Phaser.Sprite {
 
         this.anchor.setTo(0.5);
         this.movement = "none";
-        this.playerState = playerStates.ALIVE;
+        this.playerState = playerStates.INACTIVE;
+    }
+
+    setAlive(){
+      this.body.gravity.set(0,200);
+      this.playerState = playerStates.ALIVE;
     }
 
     setMovement(movement) {

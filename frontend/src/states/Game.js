@@ -34,6 +34,11 @@ export default class extends Phaser.State {
         tmp.destroy();
         this.game.add.existing(this.gametimer);
       }, this);
+
+      for(let [id,ship] of this.spaceShips.entries()){
+        ship.setAlive();
+      }
+
       this.gametimer.start();
 
     }
@@ -49,7 +54,7 @@ export default class extends Phaser.State {
         this.load.image('finish', 'assets/images/finish.png');
 
 
-        // // Log errors
+        // Log errors
         this.websocket.onerror = function (error) {
             console.log('WebSocket Error ' + error);
         };

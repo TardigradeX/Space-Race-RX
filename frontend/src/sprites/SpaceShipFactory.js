@@ -23,7 +23,7 @@ export default class SpaceShipFactory {
 
         ship.body.drag.set(100);
         ship.body.maxVelocity.set(200);
-        ship.body.gravity.set(0, 200);
+        ship.body.gravity.set(0, 0);
         ship.body.collideWorldBounds=true;
         ship.body.bounce.setTo(0.4, 0.4);
 
