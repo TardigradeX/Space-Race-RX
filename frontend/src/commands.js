@@ -28,6 +28,7 @@ export const targets = {
 export const playerStates = {
     ALIVE : 1,
     DEAD : 0,
+    FINISHED: 2,
 };
 
 export const payloads = {
