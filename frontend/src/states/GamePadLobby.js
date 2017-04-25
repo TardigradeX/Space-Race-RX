@@ -94,11 +94,11 @@ export default class extends Phaser.State {
       let i = -1;
       let offset = 44;
       let x = this.game.world.centerX;
-      let y = this.game.world.centerY;
+      let y;
 
       let rooms = this.listofRooms;
       for(let key1 in rooms){
-        y = y + (offset*i);
+        y = this.game.world.centerY + (offset*i);
         console.log("key =", key1);
         console.log('Adding text to:', x, y);
         bmtext = this.game.add.bitmapText(x, y, 'desyrel1', key1, offset);
