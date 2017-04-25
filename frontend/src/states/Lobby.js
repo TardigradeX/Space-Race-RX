@@ -60,6 +60,7 @@ export default class extends Phaser.State {
     }
 
     create () {
+      let returntext;
 
       this.indicator = new VisualTimer({
 					game: this.game,
@@ -69,6 +70,23 @@ export default class extends Phaser.State {
 					onComplete: function() { console.log('>>> Go Go Go') }
 				});
         this.game.add.text(this.game.world.centerX - 95 - 60, 230, "until game start");
+
+        this.buttonReturn = this.game.add.button((3*this.game.world.centerX)/4, 400, 'button', this.lastState, this, 2,1,0);
+        this.buttonReturn.anchor.setTo(1.2,0.5);
+        returntext = this.game.add.bitmapText(this.buttonReturn.x, this.buttonReturn.y,'desyrel1', 'Return');
+        returntext.anchor.setTo(0, 0.5);
+
+
+    }
+
+    lastState(){
+      let target, payload, msg;
+      target = targets.SERVER + TARGET_DELIMETER + NONE + TARGET_DELIMETER + NONE
+      payload = NONE
+      msg = commands.LOGOUT + DELIMETER + targets + DELIMETER + payload
+      this.websocket.send(msg)
+      this.state.start('DummyDecide');
+
     }
 
     allReady(playerStates){
@@ -195,17 +213,13 @@ export default class extends Phaser.State {
           this.playerReady[parseInt(playerId) - 1] = 0
         }
 
-        console.log(this.playerReady);
-        console.log(this.psigns);
         for(var i = 0; i < this.playerReady.length; i++){
           if(this.playerReady !== null){
             this.showReadyState(this.playerReady[i], this.psigns[i])
           }
         }
         this.allReadyState = this.allReady(this.playerReady);
-        console.log('All ready:', this.allReadyState);
     }
-
     update () {
         if (this.roomId.length > 0) {
             let text = this.game.add.text(this.game.width / 3, 20, "Welcome to Room " + this.roomId);

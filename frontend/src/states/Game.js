@@ -3,7 +3,9 @@ import Phaser from 'phaser'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
 import {commands, DELIMETER, TARGET_DELIMETER, playerStates} from "../commands";
 import {getFinishFromMap, getStartFromMap} from '../tileMapUtils';
-import Finish from '../sprites/finish'
+import Finish from '../sprites/finish';
+import BitmapTimer from '../sprites/BitmapTimer';
+import BitmapStats from '../sprites/BitmapStats';
 
 export default class extends Phaser.State {
 
@@ -11,7 +13,24 @@ export default class extends Phaser.State {
         this.websocket = websocket;
         this.roomId = roomId;
         this.players = players;
-        this.emitter;
+
+        this.controllerActive = false;
+        this.gameFinished = false;
+
+        this.gametimer;
+        this.countdownEvent;
+        this.startTime;
+        this.timeview;
+    }
+
+    startGame(){
+      this.controllerActive = true;
+      this.gametimer.visible = false;
+      // Phaser.Game.add.bitmapText(x, y, font, text, size, group) : Phaser.BitmapText;
+      this.gametimer.reset(true);
+      let tmp = this.game.add.bitmapText(this.game.world.centerX, this.game.world.centerY, 'desyrel1', "GO", 256);
+      tmp.anchor.set(0.5);
+      this.game.time.events.add(1000, function(){tmp.destroy(); this.gametimer.visible = true; this.gametimer.start();}, this);
     }
 
     preload() {
@@ -23,7 +42,8 @@ export default class extends Phaser.State {
         this.load.image('spaceship', 'assets/images/spaceship.png');
         this.load.image('finish', 'assets/images/finish.png');
 
-        // Log errors
+
+        // // Log errors
         this.websocket.onerror = function (error) {
             console.log('WebSocket Error ' + error);
         };
@@ -33,41 +53,7 @@ export default class extends Phaser.State {
         }.bind(this);
     }
 
-    parse(message) {
-        let mySplit = message.split(DELIMETER);
-        if (mySplit.length == 3) {
-            let cmd = mySplit[0];
-            let target = mySplit[1];
-            let payload = mySplit[2];
-            if (cmd == 'message') {
-                let playerId = target.split(TARGET_DELIMETER)[2];
-                this.spaceShips.get(playerId).movement = payload;
-            }
-            if (cmd == commands.LEFTROLL) {
-                let playerId = target.split(TARGET_DELIMETER)[2];
-                this.spaceShips.get(playerId).movement = cmd;
-            }
-            if (cmd == commands.RIGHTROLL) {
-                let playerId = target.split(TARGET_DELIMETER)[2];
-                this.spaceShips.get(playerId).movement = cmd;
-            }
-            if (cmd == commands.THRUST) {
-                let playerId = target.split(TARGET_DELIMETER)[2];
-                this.spaceShips.get(playerId).movement = cmd;
-            }
-            if (cmd == commands.NONE) {
-                let playerId = target.split(TARGET_DELIMETER)[2];
-                this.spaceShips.get(playerId).movement = cmd;
-            }
-            if (cmd == commands.LOGOUT) {
-                let playerId = target.split(TARGET_DELIMETER)[2];
-                this.removeSpaceShip(this.spaceShips, playerId);
-            }
-      }
-    }
-
     create() {
-
         this.map = this.game.add.tilemap('level1');
 
         this.map.addTilesetImage('MY_TILES', 'gameTiles');
@@ -103,8 +89,22 @@ export default class extends Phaser.State {
          // this.spaceShips.set("1", this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
 
         for (let i = 0; i < this.players.length; i++) {
-            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
+            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(startPosition.x + ((i-2) * 32), startPosition.y , 'spaceship'));
+            this.spaceShips.get(this.players[i].id).time = '00:00:00';
         }
+
+
+        this.stats = new BitmapStats({game : this.game,  name : 'statsgroup', x : 2, y : 14, font : 'desyrel1', size : 32});
+        // for(let i = 0; i < 4; i++){
+        //   this.stats.recordTime('Player' + (i + 1), (i * 1000) + 3);
+        // }
+        // this.stats.viewTimes();
+
+        this.gametimer = new BitmapTimer({game : this.game,  x : this.game.world.centerX, y : 40, font : 'desyrel1', size : 64});
+        this.gametimer.anchor.setTo(0.5, 0);
+        this.game.add.existing(this.gametimer);
+        this.gametimer.countdown(Phaser.Timer.SECOND * 3, this.startGame, this);
+        this.gametimer.start();
     }
 
     resetShip (spaceShip, x ,y) {
@@ -136,9 +136,45 @@ export default class extends Phaser.State {
                     this.explodeAndWaitForReset(spaceShip);
                 }
 
-                this.hasFinished(spaceShip, id);
-            }
+            this.hasFinished(spaceShip, id);
+        }
+        if(this.gameFinished){
+          this.stats.viewTimes();
+        }
+    }
 
+    parse(message) {
+        let mySplit = message.split(DELIMETER);
+        if (mySplit.length == 3) {
+            let cmd = mySplit[0];
+            let target = mySplit[1];
+            let payload = mySplit[2];
+            if (cmd == 'message') {
+                let playerId = target.split(TARGET_DELIMETER)[2];
+                this.spaceShips.get(playerId).movement = payload;
+            }
+            if (cmd == commands.LEFTROLL) {
+                let playerId = target.split(TARGET_DELIMETER)[2];
+                this.spaceShips.get(playerId).movement = cmd;
+            }
+            if (cmd == commands.RIGHTROLL) {
+                let playerId = target.split(TARGET_DELIMETER)[2];
+                this.spaceShips.get(playerId).movement = cmd;
+            }
+            if (cmd == commands.THRUST) {
+                let playerId = target.split(TARGET_DELIMETER)[2];
+                this.spaceShips.get(playerId).movement = cmd;
+            }
+            if (cmd == commands.NONE) {
+                let playerId = target.split(TARGET_DELIMETER)[2];
+                this.spaceShips.get(playerId).movement = cmd;
+            }
+            if (cmd == commands.LOGOUT) {
+                let playerId = target.split(TARGET_DELIMETER)[2];
+                this.removeSpaceShip(this.spaceShips, playerId);
+            }
+      }
+    }
         }
 
     }
@@ -154,6 +190,7 @@ export default class extends Phaser.State {
    }
 
   removeSpaceShip(item, playerId){
+    removeSpaceShip(item, playerId){
       console.log('Deleting ship of player',playerId);
       /**
       [BUG]
@@ -163,7 +200,7 @@ export default class extends Phaser.State {
       item.get(playerId).explode();
       // item.get(playerId).destroy();
       // item.delete(playerId);
-  }
+    }
 
     hasFinished(sprite, id) {
         if (Math.abs(sprite.x - this.finishPosition.x) < 32 &&
@@ -173,6 +210,28 @@ export default class extends Phaser.State {
     }
 
     playerFinished(id) {
-        this.state.start('GameFinished', true, false, id);
+      let ms1 = this.gametimer.timer.ms
+      this.spaceShips.get(id).time = ms1;
+      console.log("Time:" + this.spaceShips.get(id).time);
+      this.stats.recordTime(id, ms1);
+      this.stats.viewTimes();
+
+      this.spaceShips.get(id).explode();
+      // this.spaceShips.get(id).isAlive = false;
+      let n,c;
+      n = this.spaceShips.length;
+      c = 0;
+      for(let [id, spaceShip] of this.spaceShips.entries()){
+        if(!this.spaceShips.get(id).isFinished){c++;}
+      }
+
+      let winnderId = -1;
+      if(c == (n - 1)){
+          this.controllerActive = false;
+          this.gameFinished = true;
+          this.game.time.events.add(5000, function(id){
+          this.state.start('GameFinished', true, false, id);
+        }, this, winnderId);
+      }
     }
-}
+  }

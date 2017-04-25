@@ -1,3 +1,4 @@
+
 import Phaser from 'phaser'
 import config from '../config'
 import {commands, targets, payloads, DELIMETER, NONE, TARGET_DELIMETER} from '../commands'
@@ -90,16 +91,18 @@ export default class extends Phaser.State {
 
     showAvailableRooms(){
       let bmtext;
-      let i = 1;
+      let i = -1;
       let offset = 44;
-      let x = this.game.world.centerX - 100;
-      let y = this.game.world.centerY - offset*3;
+      let x = this.game.world.centerX;
+      let y = this.game.world.centerY;
 
       let rooms = this.listofRooms;
       for(let key1 in rooms){
+        y = y + (offset*i);
         console.log("key =", key1);
-        console.log('Adding text to:', x, y+(offset*i));
-        bmtext = this.game.add.bitmapText(x, y + (offset*i) + 10, 'desyrel1', key1, offset);
+        console.log('Adding text to:', x, y);
+        bmtext = this.game.add.bitmapText(x, y, 'desyrel1', key1, offset);
+        bmtext.anchor.setTo(0.5);
         bmtext.inputEnabled = true;
         bmtext.useHandCursor = true;
         bmtext.roomid = key1
