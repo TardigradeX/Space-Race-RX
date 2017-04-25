@@ -20,6 +20,12 @@ export default class extends Phaser.State {
     }
 
     create () {
+       /* if(this.game.device.desktop) {
+            this.onMaster();
+        } else {
+            this.onController();
+        }*/
+
       let mastertext, controllertext,returntext;
       this.buttonMaster = this.game.add.button(this.game.world.centerX/2, this.game.world.centerY/4, 'button', this.onMaster, this, 2, 1, 0);
       this.buttonMaster.anchor.setTo(1.2,0.5);

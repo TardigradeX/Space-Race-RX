@@ -3,6 +3,29 @@ import * as strings from "../commands";
 
 
 export default class extends Phaser.State {
+
+
+    constructor() {
+        super();
+        window.addEventListener("resize", function(event) {
+            if(this.game != null) {
+                const docElement = document.documentElement;
+                this.game.width = docElement.clientWidth;
+                this.game.height = docElement.clientHeight;
+                this.buttonBoostRight.centerX = this.game.world.centerX;
+                this.buttonBoostRight.centerY = this.game.world.centerY;
+                this.buttonBoostRight.anchor.setTo(0.6);
+
+                this.buttonBoostLeft.centerX = this.game.world.centerX;
+                this.buttonBoostLeft.centerY = this.game.world.centerY;
+                this.buttonBoostLeft.anchor.setTo(0.5);
+
+                this.game.renderer.resize(this.game.width,this.game.height);
+                console.log("RESIZED");
+            }
+        }.bind(this));
+    }
+
     init(websocket, roomId) {
         this.websocket = websocket;
         this.roomId = roomId;
@@ -30,7 +53,7 @@ export default class extends Phaser.State {
     create() {
 
         this.buttonBoostRight = this.game.add.button(this.game.world.centerX, this.game.world.centerY, 'button', null, this, 0, 1, 0, 1);
-        this.buttonBoostRight.anchor.setTo(1.4, 0.5);
+        this.buttonBoostRight.anchor.setTo(0.5, 0.5);
         this.buttonBoostRight.scale.setTo(1.8, 1.8);
         this.buttonBoostRight.events.onInputOver.add(function () {
             this.rightDown = true;
@@ -51,7 +74,7 @@ export default class extends Phaser.State {
 
 
         this.buttonBoostLeft = this.game.add.button(this.game.world.centerX, this.game.world.centerY, 'button', null, this, 0, 1, 0, 1);
-        this.buttonBoostLeft.anchor.setTo(-.4, 0.5);
+        this.buttonBoostLeft.anchor.setTo(-0.5, 0.5);
         this.buttonBoostLeft.scale.setTo(1.8, 1.8);
         this.buttonBoostLeft.events.onInputOver.add(function () {
             this.leftDown = true;
@@ -84,15 +107,13 @@ export default class extends Phaser.State {
          }else {
             payload = strings.commands.NONE;
          }
-         let cmd = payload
-        //  let message = strings.commands.MESSAGE + strings.DELIMETER +
-        //      strings.targets.MASTER + strings.TARGET_DELIMETER + this.roomId +
-        //      strings.TARGET_DELIMETER + 1 + strings.DELIMETER + payload;
+
+        let cmd = payload
+
         let target = strings.targets.MASTER + strings.TARGET_DELIMETER +
                     this.roomId + strings.TARGET_DELIMETER + strings.NONE;
         let message = cmd + strings.DELIMETER + target + strings.DELIMETER + payload;
         this.websocket.send(message);
     }
-
 
 }
