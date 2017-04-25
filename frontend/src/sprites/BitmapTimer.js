@@ -6,6 +6,7 @@ export default class extends Phaser.BitmapText {
     super(game, x, y, font, '00:00:00', size, 'center');
     this.game = game;
 
+    this.anchor.setTo(0.5);
     this.milliseconds = false;
     this.event = undefined;
     this.isCountdown = false;
@@ -71,4 +72,5 @@ export default class extends Phaser.BitmapText {
     if (seconds < 10)        seconds = '0' + seconds;
     return(minutes + ':'+ seconds);
   }
+
 }

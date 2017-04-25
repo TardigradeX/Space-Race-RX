@@ -17,6 +17,7 @@ export default class extends Phaser.State {
         this.controllerActive = false;
         this.gameFinished = false;
 
+        this.starttimer;
         this.gametimer;
         this.countdownEvent;
         this.startTime;
@@ -24,16 +25,17 @@ export default class extends Phaser.State {
     }
 
     startGame() {
-        this.controllerActive = true;
-        this.gametimer.visible = false;
-        this.gametimer.reset(true);
-        let tmp = this.game.add.bitmapText(this.game.world.centerX, this.game.world.centerY, 'desyrel1', "GO", 256);
-        tmp.anchor.set(0.5);
-        this.game.time.events.add(1000, function () {
-            tmp.destroy();
-            this.gametimer.visible = true;
-            this.gametimer.start();
-        }, this);
+      this.starttimer.destroy();
+      this.controllerActive = true;
+      let tmp = this.game.add.bitmapText(this.game.world.centerX, this.game.world.centerY, 'desyrel1', "GO", 256);
+      tmp.anchor.set(0.5);
+
+      this.game.time.events.add(1000, function () {
+        tmp.destroy();
+        this.game.add.existing(this.gametimer);
+      }, this);
+      this.gametimer.start();
+
     }
 
     preload() {
@@ -58,8 +60,6 @@ export default class extends Phaser.State {
     }
 
     create() {
-        this.explosion = this.game.add.audio('explosion');
-        this.game.sound.setDecodedCallback([this.explosion], this.start, this);
         this.map = this.game.add.tilemap('level1');
 
         this.map.addTilesetImage('MY_TILES', 'gameTiles');
@@ -107,6 +107,17 @@ export default class extends Phaser.State {
         // }
         // this.stats.viewTimes();
 
+        this.starttimer = new BitmapTimer({
+            game: this.game,
+            x: this.game.world.centerX,
+            y: this.game.world.centerY,
+            font: 'desyrel1',
+            size: 128
+        });
+        this.game.add.existing(this.starttimer);
+        this.starttimer.countdown(Phaser.Timer.SECOND * 3, this.startGame, this);
+        this.starttimer.start();
+
         this.gametimer = new BitmapTimer({
             game: this.game,
             x: this.game.world.centerX,
@@ -114,14 +125,6 @@ export default class extends Phaser.State {
             font: 'desyrel1',
             size: 64
         });
-        this.gametimer.anchor.setTo(0.5, 0);
-        this.game.add.existing(this.gametimer);
-        this.gametimer.countdown(Phaser.Timer.SECOND * 3, this.startGame, this);
-        this.gametimer.start();
-    }
-
-    start() {
-       console.log("Sound Ready")
     }
 
     resetShip(spaceShip, x, y) {
@@ -131,7 +134,6 @@ export default class extends Phaser.State {
         spaceShip.x = x;
         spaceShip.y = y;
     }
-
 
     update() {
         for (let [id, spaceShip] of this.spaceShips.entries()) {
