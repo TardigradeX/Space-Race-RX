@@ -36,6 +36,11 @@ export default class extends Phaser.Sprite {
         );
     }
 
+    finished() {
+        this.playerState = playerStates.FINISHED;
+        this.alpha = 0.0;
+    }
+
     repair() {
         this.playerState = playerStates.ALIVE;
         this.alpha = 1.0;

@@ -224,13 +224,12 @@ export default class extends Phaser.State {
             this.stats.recordTime(id, ms1);
             this.stats.viewTimes();
 
-            this.spaceShips.get(id).explode();
-            // this.spaceShips.get(id).isAlive = false;
+            this.spaceShips.get(id).finished();
             let n, c;
             n = this.spaceShips.length;
             c = 0;
             for (let [id, spaceShip] of this.spaceShips.entries()) {
-                if (!this.spaceShips.get(id).isFinished) {
+                if (!this.spaceShips.get(id).playerState == playerStates.FINISHED) {
                     c++;
                 }
             }
