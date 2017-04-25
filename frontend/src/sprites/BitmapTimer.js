@@ -49,27 +49,26 @@ export default class extends Phaser.BitmapText {
     this.isCountdown = true;
     console.log(this.event.delay);
   }
-  getMilliseconds() {
-      return(this.formatMilliseconds(this.timer.ms));
-  }
 
   formatMilliseconds(ms) {
+    let minutes, seconds, milliseconds;
     if(ms < 0) return("0:00:00");
-    this.minutes = Math.floor(ms / 60000) % 60;
-    this.seconds = Math.floor(ms / 1000) % 60;
-    this.milliseconds = Math.floor(ms) % 100;
+    minutes = Math.floor(ms / 60000) % 60;
+    seconds = Math.floor(ms / 1000) % 60;
+    milliseconds = Math.floor(ms) % 100;
     //If any of the digits becomes a single digit number, pad it with a zero    if (milliseconds < 10)        milliseconds = '0' + milliseconds;
-    if (this.seconds < 10)        this.seconds = '0' + this.seconds;
-    if (this.minutes < 10)        this.minutes = '0' + this.minutes;
-    return(this.minutes + ':'+ this.seconds + ':' + this.milliseconds);
+    if (seconds < 10)        seconds = '0' + seconds;
+    if (minutes < 10)        minutes = '0' + minutes;
+    return(minutes + ':'+ seconds + ':' + milliseconds);
   }
 
   formatSeconds(ms) {
+    let minutes, seconds;
     if(ms < 0) return("0:00");
-    this.minutes = Math.floor(ms / 60000) % 60;
-    this.seconds = Math.floor(ms / 1000) % 60;
+    minutes = Math.floor(ms / 60000) % 60;
+    seconds = Math.floor(ms / 1000) % 60;
     //If any of the digits becomes a single digit number, pad it with a zero    if (milliseconds < 10)        milliseconds = '0' + milliseconds;
-    if (this.seconds < 10)        this.seconds = '0' + this.seconds;
-    return(this.minutes + ':'+ this.seconds);
+    if (seconds < 10)        seconds = '0' + seconds;
+    return(minutes + ':'+ seconds);
   }
 }
