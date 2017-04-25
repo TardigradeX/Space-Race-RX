@@ -1,7 +1,7 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import SpaceShipFactory from "../sprites/SpaceShipFactory";
-import {commands, DELIMETER, TARGET_DELIMETER, playerStates} from "../commands";
+import {commands, DELIMETER, TARGET_DELIMETER, playerStates, colors} from "../commands";
 import {getFinishFromMap, getStartFromMap} from '../tileMapUtils';
 import Finish from '../sprites/finish';
 import BitmapTimer from '../sprites/BitmapTimer';
@@ -37,6 +37,7 @@ export default class extends Phaser.State {
     }
 
     preload() {
+        this.game.load.audio('explosion', './assets/audio/explosion.mp3');
         this.load.image('explosion', './assets/sprites/enemy-bullet.png');
 
         this.game.load.tilemap('level1', 'assets/maps/space_race_level1.json', null, Phaser.Tilemap.TILED_JSON);
@@ -57,6 +58,8 @@ export default class extends Phaser.State {
     }
 
     create() {
+        this.explosion = this.game.add.audio('explosion');
+        this.game.sound.setDecodedCallback([this.explosion], this.start, this);
         this.map = this.game.add.tilemap('level1');
 
         this.map.addTilesetImage('MY_TILES', 'gameTiles');
@@ -91,7 +94,9 @@ export default class extends Phaser.State {
         // this.spaceShips.set("1", this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
 
         for (let i = 0; i < this.players.length; i++) {
-            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.startPosition.x + ((i - 2) * 32), this.startPosition.y, 'spaceship'));
+            let ship = this.factory.getSpaceShip(this.startPosition.x + ((i - 2) * 32), this.startPosition.y, 'spaceship');
+            ship.tint = colors[i];
+            this.spaceShips.set(this.players[i].id, ship);
             this.spaceShips.get(this.players[i].id).time = '00:00:00';
         }
 
@@ -113,6 +118,10 @@ export default class extends Phaser.State {
         this.game.add.existing(this.gametimer);
         this.gametimer.countdown(Phaser.Timer.SECOND * 3, this.startGame, this);
         this.gametimer.start();
+    }
+
+    start() {
+       console.log("Sound Ready")
     }
 
     resetShip(spaceShip, x, y) {
@@ -189,6 +198,7 @@ export default class extends Phaser.State {
 
     explodeAndWaitForReset(spaceShip) {
         spaceShip.explode();
+        this.explosion.play();
         this.game.time.events.add(
             3000,
             function () {

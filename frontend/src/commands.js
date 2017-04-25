@@ -31,6 +31,15 @@ export const playerStates = {
     FINISHED: 2,
 };
 
+export const colors = [
+    0xff0000,
+    0x00ff00,
+    0xff00ff,
+    0x0000ff
+];
+
+
+
 export const payloads = {
     JOINED : "joined",
     SIGNUP : 'signup',
