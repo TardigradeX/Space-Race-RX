@@ -17,6 +17,7 @@ export default class extends Phaser.State {
         this.controllerActive = false;
         this.gameFinished = false;
 
+        this.starttimer;
         this.gametimer;
         this.countdownEvent;
         this.startTime;
@@ -24,16 +25,17 @@ export default class extends Phaser.State {
     }
 
     startGame() {
-        this.controllerActive = true;
-        this.gametimer.visible = false;
-        this.gametimer.reset(true);
-        let tmp = this.game.add.bitmapText(this.game.world.centerX, this.game.world.centerY, 'desyrel1', "GO", 256);
-        tmp.anchor.set(0.5);
-        this.game.time.events.add(1000, function () {
-            tmp.destroy();
-            this.gametimer.visible = true;
-            this.gametimer.start();
-        }, this);
+      this.starttimer.destroy();
+      this.controllerActive = true;
+      let tmp = this.game.add.bitmapText(this.game.world.centerX, this.game.world.centerY, 'desyrel1', "GO", 256);
+      tmp.anchor.set(0.5);
+
+      this.game.time.events.add(1000, function () {
+        tmp.destroy();
+        this.game.add.existing(this.gametimer);
+      }, this);
+      this.gametimer.start();
+
     }
 
     preload() {
@@ -47,13 +49,13 @@ export default class extends Phaser.State {
 
 
         // // Log errors
-        this.websocket.onerror = function (error) {
-            console.log('WebSocket Error ' + error);
-        };
-
-        this.websocket.onmessage = function (message) {
-            this.parse(message.data)
-        }.bind(this);
+        // this.websocket.onerror = function (error) {
+        //     console.log('WebSocket Error ' + error);
+        // };
+        //
+        // this.websocket.onmessage = function (message) {
+        //     this.parse(message.data)
+        // }.bind(this);
     }
 
     create() {
@@ -88,12 +90,12 @@ export default class extends Phaser.State {
         this.game.add.existing(finish);
 
         // For Debugging Maps
-        // this.spaceShips.set("1", this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
+        this.spaceShips.set("1", this.factory.getSpaceShip(this.startPosition.x, this.startPosition.y, 'spaceship'));
 
-        for (let i = 0; i < this.players.length; i++) {
-            this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.startPosition.x + ((i - 2) * 32), this.startPosition.y, 'spaceship'));
-            this.spaceShips.get(this.players[i].id).time = '00:00:00';
-        }
+        // for (let i = 0; i < this.players.length; i++) {
+        //     this.spaceShips.set(this.players[i].id, this.factory.getSpaceShip(this.startPosition.x + ((i - 2) * 32), this.startPosition.y, 'spaceship'));
+        //     this.spaceShips.get(this.players[i].id).time = '00:00:00';
+        // }
 
 
         this.stats = new BitmapStats({game: this.game, name: 'statsgroup', x: 2, y: 14, font: 'desyrel1', size: 32});
@@ -102,6 +104,17 @@ export default class extends Phaser.State {
         // }
         // this.stats.viewTimes();
 
+        this.starttimer = new BitmapTimer({
+            game: this.game,
+            x: this.game.world.centerX,
+            y: this.game.world.centerY,
+            font: 'desyrel1',
+            size: 128
+        });
+        this.game.add.existing(this.starttimer);
+        this.starttimer.countdown(Phaser.Timer.SECOND * 3, this.startGame, this);
+        this.starttimer.start();
+
         this.gametimer = new BitmapTimer({
             game: this.game,
             x: this.game.world.centerX,
@@ -109,10 +122,6 @@ export default class extends Phaser.State {
             font: 'desyrel1',
             size: 64
         });
-        this.gametimer.anchor.setTo(0.5, 0);
-        this.game.add.existing(this.gametimer);
-        this.gametimer.countdown(Phaser.Timer.SECOND * 3, this.startGame, this);
-        this.gametimer.start();
     }
 
     resetShip(spaceShip, x, y) {
@@ -122,7 +131,6 @@ export default class extends Phaser.State {
         spaceShip.x = x;
         spaceShip.y = y;
     }
-
 
     update() {
         for (let [id, spaceShip] of this.spaceShips.entries()) {
@@ -185,7 +193,6 @@ export default class extends Phaser.State {
             }
         }
     }
-
 
     explodeAndWaitForReset(spaceShip) {
         spaceShip.explode();
