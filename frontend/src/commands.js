@@ -29,6 +29,7 @@ export const playerStates = {
     ALIVE : 1,
     DEAD : 0,
     FINISHED: 2,
+    INACTIVE: 3
 };
 
 export const colors = [
